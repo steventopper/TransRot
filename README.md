@@ -26,8 +26,8 @@ The sawtooth simulated annealing and magwalk methods are more thoroughly describ
 <ol>
 <li>F.M. Torres, E. Agichtein, L. Grinberg, G. Yu, R.Q. Topper, A note on the application of the “Boltzmann simplex”-simulated annealing algorithm to global optimizations of argon and water clusters, Journal of Molecular Structure (THEOCHEM) 419, 85 (1997). DOI: https://doi.org/S0166-1280(97)00195-4 </li>
 <li>R.Q. Topper, D.L. Freeman, D. Bergin, K. LaMarche, Computational techniques and strategies for Monte Carlo thermodynamic calculations with applications to nanoclusters,  invited book chapter, Reviews in Computational Chemistry, Vol. 19, pp. 1-41, K.B. Lipkowitz, R. Larter and T.R. Cundari, Eds., Wiley-VCH/John Wiley and Sons, New York (2003). ISBN 0-471-23585-7.</li>
-<li>R.Q. Topper, W. V. Feldmann, I. Markus,, D. Bergin, P.R. Sweeney, Simulated annealing and density functional theory calculations of structural and energetic properties of the ammonium chloride clusters (NH4Cl)n, (NH4+)(NH4Cl)n and (Cl–)(NH4Cl)n, n = 1–13, Journal of Physical Chemistry A, 115 (38), pp. 10423-10432 (2011).
-J.J. Biswakarma, V. Ciocoi, R.Q. Topper, Energetics, thermodynamics, and hydrogen bond diversity in ammonium halide clusters, 120(40), pp. 7924-7934 (2016).</li>
+<li>R.Q. Topper, W. V. Feldmann, I. Markus,, D. Bergin, P.R. Sweeney, Simulated annealing and density functional theory calculations of structural and energetic properties of the ammonium chloride clusters (NH4Cl)n, (NH4+)(NH4Cl)n and (Cl–)(NH4Cl)n, n = 1–13, Journal of Physical Chemistry A, 115 (38), pp. 10423-10432 (2011).</li>
+<li>J.J. Biswakarma, V. Ciocoi, R.Q. Topper, Energetics, thermodynamics, and hydrogen bond diversity in ammonium halide clusters, 120(40), pp. 7924-7934 (2016).</li>
 </ol>
 
 ## Prerequisites: 
@@ -97,7 +97,7 @@ The pairwise interaction potential assumed by TransRot uses the formula
 
 <img src=https://user-images.githubusercontent.com/6625247/132400608-07cada97-4d94-4674-81e2-aaafee35f550.PNG width=50% height=50%>
 
-The double sums above are meant to imply that all of the interactions are summed up between the atoms (i and j) associated with the various particles within any given system. The base units employed for these parameters are (kcal/mole, Angstroms, atomic charge units). In the database, the user specifies the parameters (Aii,Bii,Cii,Dii,Qi,mass) for each atom, with the following units: 
+The double sums above are meant to imply that all of the interactions are summed up between the atoms (i and j) associated with the various particles within any given system. The base units employed for these parameters are (kcal/mole, Angstroms, atomic charge units). In the database, the user specifies the parameters (Aii,Bii,Cii,Dii,Qi,massi) for each atom, with the following units: 
 
 Parameter  &nbsp;&nbsp;&nbsp;&nbsp;  Database Units \
 Aii  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;  kcal/mole \
