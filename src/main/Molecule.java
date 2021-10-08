@@ -1,5 +1,7 @@
 package main;
 import java.util.ArrayList;
+import java.util.HashMap;
+
 import org.apache.commons.math3.random.MersenneTwister;
 
 public class Molecule {
@@ -14,16 +16,22 @@ public class Molecule {
     double radius;
     private MersenneTwister r = new MersenneTwister();
     ArrayList<Atom> atoms;
+    HashMap<String, Integer> atomSymbols = new HashMap<>(); //Used for pattern matching
     public Molecule(String n, double rad, ArrayList<Atom> a){
         name = n;
         radius = rad;
-        //Temps will be set before use
-        this.x = -1;
-        this.y = -1;
-        this.z = -1;
         atoms = a;
         resetTemps();
-        setCenterOfMass();
+        setCenterOfMass(); //Also sets starting position, just in case of error
+
+        for (Atom atom : atoms){
+             if (atomSymbols.containsKey(atom.symbol)){
+                 atomSymbols.replace(atom.symbol, atomSymbols.get(atom.symbol) + 1);
+             }
+             else{
+                 atomSymbols.put(atom.symbol, 1);
+             }
+        }
     }
     //For copying molecules from database List object
     public Molecule(Molecule m){
@@ -36,6 +44,7 @@ public class Molecule {
         for (Atom a : m.atoms){
             atoms.add(new Atom(a));
         }
+        atomSymbols = m.atomSymbols;
         resetTemps();
     }
     //Moves molecule to x,y,z position

@@ -11,59 +11,16 @@ public class Main {
         long time1 = System.nanoTime();
     	s.readDB();
     	s.readCFG();
-        /**Scanner scanner = new Scanner(System.in);
-        while (true) {
-            System.out.print("Please enter the desired side length of the cubic space. This size may be automatically increased to fit your desired molecules.\n>");
-            String input = scanner.nextLine();
-            try {
-                s.size = Double.parseDouble(input);
-                if (s.size <= 0) {
-            		throw new Exception();
-            	}
-                break;
-            }
-            catch (Exception exc){
-                System.out.print("Invalid side length. ");
-            }
-        }
-        System.out.println("Please enter the chemical formula of a molecule you would like to add to the space, followed by the number of that molecule you would like to add. \nExample: H20 4");
-        System.out.print("Available molecules:\n" + s.printDbase() + "\n>");
-        String input = scanner.nextLine();
-        while (true) {
-            while (!input.equals("")) {
-                String[] in = input.split(" ");
-                if (in.length != 2) {
-                    System.out.print("Error: Improper input. Please try again.\n>");
-                }
-                else {
-                    int num = 0;
-                    try {
-                        num = Integer.parseInt(in[1]);
-                    } catch (Exception exc) {
-                        System.out.print("Error: Improper input. Please try again.\n>");
-                    }
-                    for (int x = 0; x < num; x++) {
-                        if (!s.add(in[0])) {
-                            System.out.print("Error: Unable to find molecule '" + in[0] + "'. Please try again.\n>");
-                            break;
-                        } else if (x == num - 1) {
-                            System.out.print("Added " + in[1] + " of molecule '" + in[0] + "'. Please add another molecule or press enter to continue.\n>");
-                        }
-                    }
-                }
-                input = scanner.nextLine();
-            }
-            if (s.list.size() <= 0){
-                System.out.print("Error: No molecules added to array. Please add a molecule.\n>");
-                input = scanner.nextLine();
-                continue;
-            }
-            break;
-        }**/
-        //If molecules can't be placed in space of given size within 20 tries, increase size by 10% and retry
-        while (!s.propagate()){
-            s.size = s.size * 1.1;
-        }
+    	if (s.useInput) {
+    		//Read molecules from Input.xyz, do not propagate
+			s.readInput();
+		}
+    	else {
+			//If molecules can't be placed in space of given size within 20 tries, increase size by 10% and retry
+			while (!s.propagate()) {
+				s.size = s.size * 1.1;
+			}
+		}
         s.makeDirectory();
         long time2 = System.nanoTime();
         String stamp = timestamp(time1, time2);

@@ -3,6 +3,7 @@ import java.io.*;
 import java.math.BigDecimal;
 import java.net.URLDecoder;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Scanner;
 import org.apache.commons.math3.random.MersenneTwister;
 import org.apache.commons.math3.util.Precision;
@@ -23,6 +24,8 @@ public class Space {
     double magwalkFactorTrans;
     double magwalkProbTrans;
     double magwalkProbRot;
+
+    boolean useInput;
 
     private String dir; //Directory of .xyz files to be saved in, created at runtime
 
@@ -168,7 +171,7 @@ public class Space {
             //Skip 2 lines for comments
             scanner.nextLine();
             scanner.nextLine();
-            try{
+            try {
                 //Read configs
                 maxTemperature = Double.parseDouble(scanner.nextLine().split("\t")[1]);
                 movePerPoint = Integer.parseInt(scanner.nextLine().split("\t")[1]);
@@ -183,18 +186,19 @@ public class Space {
                 magwalkProbRot = Double.parseDouble(scanner.nextLine().split("\t")[1]);
                 size = Double.parseDouble(scanner.nextLine().split("\t")[1]);
                 maxPropFailures = Integer.parseInt(scanner.nextLine().split("\t")[1]);
+                useInput = Boolean.parseBoolean(scanner.nextLine().split("\t")[1]);
                 //Skip 3 lines for comments
                 scanner.nextLine();
                 scanner.nextLine();
                 scanner.nextLine();
                 //Read molecules to place
-                while (scanner.hasNextLine()){
+                while (scanner.hasNextLine()) {
                     String line = scanner.nextLine();
                     String name = line.split(" ")[0];
                     int num = Integer.parseInt(line.split(" ")[1]);
-                    for (int x = 0; x < num; x++){
-                        if (!add(name)){
-                            System.out.println("Error: unable to find molecule '" + name + "' in database.");
+                    for (int x = 0; x < num; x++) {
+                        if (!add(name)) {
+                            System.out.println("Error: Unable to find molecule '" + name + "' in database.");
                             System.exit(0);
                         }
                     }
@@ -210,6 +214,91 @@ public class Space {
             System.exit(0);
         }
     }
+    public void readInput(){
+        try{
+            //Construct path to file, rather complicated but has to work with .jar or project files for testing
+            String pathName = Main.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+            pathName = URLDecoder.decode(pathName, "utf-8");
+            pathName = "/" + pathName.substring(1, pathName.lastIndexOf("/")) + "/Input.xyz";
+            Scanner scanner = new Scanner(new File(pathName));
+            //Skip next line, since we don't care about the total number of atoms, we get it all from the comment on the next line
+            scanner.nextLine();
+            try {
+                String[] atomNums = scanner.nextLine().split(" ");
+                for (int x = 0; x < atomNums.length; x++){
+                    int atomNum = Integer.parseInt(atomNums[x]);
+                    //Four arrays used for temporary storage, never get too large since they're overwritten for each molecule
+                    String[] atomSyms = new String[atomNum];
+                    double[] atomXs = new double[atomNum];
+                    double[] atomYs = new double[atomNum];
+                    double[] atomZs = new double[atomNum];
+                    for (int y = 0; y < atomNum; y++){
+                        String[] atomVals = scanner.nextLine().split(" +"); //splits by all sets of spaces > 1
+                        //If line is preceded by space, everything breaks since we get atomVals[0] == "". So, if that's true, start from 1.
+                        int c = 0;
+                        if (atomVals[0].equals("")){
+                            c = 1;
+                        }
+                        atomSyms[y] = atomVals[c];
+                        atomXs[y] = Double.parseDouble(atomVals[c+1]);
+                        atomYs[y] = Double.parseDouble(atomVals[c+2]);
+                        atomZs[y] = Double.parseDouble(atomVals[c+3]);
+                    }
+                    //Set up hashmap to compare to atomSymbols in Molecule
+                    HashMap<String, Integer> matcher = new HashMap<>();
+                    for (String s : atomSyms){
+                        if (matcher.containsKey(s)){
+                            matcher.replace(s, matcher.get(s) + 1);
+                        }
+                        else{
+                            matcher.put(s, 1);
+                        }
+                    }
+                    boolean dbContainsMolecule = false;
+                    for (Molecule molecule : dbase){
+                        if (molecule.atomSymbols.equals(matcher)){
+                            //Copy molecule from dbase
+                            dbContainsMolecule = true;
+                            Molecule m = new Molecule(molecule);
+                            //Move each atom in m to positions defined in Input.xyz
+                            ArrayList<Atom> oldAtoms = m.atoms;
+                            ArrayList<Atom> newAtoms = new ArrayList<>();
+                            for (int z = 0; z < atomSyms.length; z++){
+                                for (Atom atom : oldAtoms){
+                                    if (atom.symbol.equals(atomSyms[z])){
+                                        atom.x = atomXs[z];
+                                        atom.y = atomYs[z];
+                                        atom.z = atomZs[z];
+                                        oldAtoms.remove(atom);
+                                        newAtoms.add(atom);
+                                        break;
+                                    }
+                                }
+                            }
+                            m.atoms = newAtoms;
+                            m.setCenterOfMass();
+                            space.add(m);
+                            break;
+                        }
+                    }
+                    if (!dbContainsMolecule){
+                        System.out.println("Error: Unable to find one or more molecules from Input.xyz in dbase.txt.");
+                        System.exit(0);
+                    }
+                }
+            }
+            catch (Exception exc){
+                System.out.println("Error: File Input.xyz incorrectly formatted.");
+                System.exit(0);
+            }
+        }
+        catch (Exception exc){
+            System.out.println("Error: File Input.xyz not found.");
+            System.exit(0);
+        }
+    }
+
+
     //Creates new directory to place output files into
     public void makeDirectory(){
         //Get current datetime and create directory name
@@ -224,6 +313,7 @@ public class Space {
             if (!f.mkdir()){
                 throw new Exception();
             }
+            //Copy config.txt to new directory
             String cfgPath = Main.class.getProtectionDomain().getCodeSource().getLocation().getPath();
             cfgPath = URLDecoder.decode(cfgPath, "utf-8");
             cfgPath = "/" + cfgPath.substring(1, cfgPath.lastIndexOf("/")) + "/config.txt";
@@ -234,6 +324,19 @@ public class Space {
             }
             String copyPath = dir + "/config.txt";
             FileWriter writer = new FileWriter(new File(copyPath));
+            writer.write(out);
+            writer.close();
+
+            String inputPath = Main.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+            inputPath = URLDecoder.decode(inputPath, "utf-8");
+            inputPath = "/" + inputPath.substring(1, inputPath.lastIndexOf("/")) + "/Input.xyz";
+            scanner = new Scanner(new File(inputPath));
+            out = "";
+            while (scanner.hasNextLine()){
+                out += scanner.nextLine() + "\n";
+            }
+            copyPath = dir + "/Input.xyz";
+            writer = new FileWriter(new File(copyPath));
             writer.write(out);
             writer.close();
         }
