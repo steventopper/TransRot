@@ -326,19 +326,20 @@ public class Space {
             FileWriter writer = new FileWriter(new File(copyPath));
             writer.write(out);
             writer.close();
-
-            String inputPath = Main.class.getProtectionDomain().getCodeSource().getLocation().getPath();
-            inputPath = URLDecoder.decode(inputPath, "utf-8");
-            inputPath = "/" + inputPath.substring(1, inputPath.lastIndexOf("/")) + "/Input.xyz";
-            scanner = new Scanner(new File(inputPath));
-            out = "";
-            while (scanner.hasNextLine()){
-                out += scanner.nextLine() + "\n";
+            if (useInput) { //If enabled, copy Input.xyz to new directory
+                String inputPath = Main.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+                inputPath = URLDecoder.decode(inputPath, "utf-8");
+                inputPath = "/" + inputPath.substring(1, inputPath.lastIndexOf("/")) + "/Input.xyz";
+                scanner = new Scanner(new File(inputPath));
+                out = "";
+                while (scanner.hasNextLine()) {
+                    out += scanner.nextLine() + "\n";
+                }
+                copyPath = dir + "/Input.xyz";
+                writer = new FileWriter(new File(copyPath));
+                writer.write(out);
+                writer.close();
             }
-            copyPath = dir + "/Input.xyz";
-            writer = new FileWriter(new File(copyPath));
-            writer.write(out);
-            writer.close();
         }
         catch (Exception exc){
             System.out.println("Error: Failed to create directory.");
