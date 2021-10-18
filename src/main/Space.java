@@ -26,6 +26,8 @@ public class Space {
     double magwalkProbRot;
 
     boolean useInput;
+    boolean extraCycle;
+    boolean staticTemp;
 
     private String dir; //Directory of .xyz files to be saved in, created at runtime
 
@@ -67,9 +69,9 @@ public class Space {
             int c = 0;
             while (true) {
                 //Determine random position
-                double x = r.nextDouble() * size;
-                double y = r.nextDouble() * size;
-                double z = r.nextDouble() * size;
+                double x = (r.nextDouble() * size) - (size / 2);
+                double y = (r.nextDouble() * size) - (size / 2);
+                double z = (r.nextDouble() * size) - (size / 2);
                 if (space.size() == 0){ //If placing first molecule, no reason to do comparisons, just place the molecule
                     m.put(x, y, z);
                     space.add(m);
@@ -187,6 +189,8 @@ public class Space {
                 size = Double.parseDouble(scanner.nextLine().split("\t")[1]);
                 maxPropFailures = Integer.parseInt(scanner.nextLine().split("\t")[1]);
                 useInput = Boolean.parseBoolean(scanner.nextLine().split("\t")[1]);
+                extraCycle = Boolean.parseBoolean(scanner.nextLine().split("\t")[1]);
+                staticTemp = Boolean.parseBoolean(scanner.nextLine().split("\t")[1]);
                 //Skip 3 lines for comments
                 scanner.nextLine();
                 scanner.nextLine();
@@ -436,7 +440,7 @@ public class Space {
     public boolean rotate(Molecule m, double maxRot, double temp) {
         m.rotateTemp(maxRot); //Temporarily rotate molecule
         for (Atom a : m.atoms){
-            if (a.tempx > size * 1.5 || a.tempx < 0 || a.tempy > size * 1.5 || a.tempy < 0 ||a.tempz > size * 1.5 || a.tempz < 0){
+            if (a.tempx > size * 0.75 || a.tempx < size * -0.75 || a.tempy > size * 0.75 || a.tempy < size * -0.75 ||a.tempz > size * 0.75 || a.tempz < size * -0.75){
                 m.resetTemps();
                 return false;
             }
@@ -479,7 +483,7 @@ public class Space {
     		a.tempz += z;
     	}
     	for (Atom a : m.atoms){
-    	    if (a.tempx > size * 1.5 || a.tempx < 0 || a.tempy > size * 1.5 || a.tempy < 0 ||a.tempz > size * 1.5 || a.tempz < 0){
+    	    if (a.tempx > size * 0.75 || a.tempx < size * -0.75 || a.tempy > size * 0.75 || a.tempy < size * -0.75 ||a.tempz > size * 0.75 || a.tempz < size * -0.75){
                 m.resetTemps();
                 return false;
             }

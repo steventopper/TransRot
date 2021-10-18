@@ -29,6 +29,9 @@ public class Main {
         s.log("Cluster movement constrained within cube with side length " + s.size * 1.5 + ".");
 		s.log("Starting Energy: " + s.calcEnergy());
         time1 = System.nanoTime();
+        if (s.staticTemp){
+        	s.numTeeth = 1;
+		}
         sawtoothAnneal(s, s.maxTemperature, s.movePerPoint, s.pointsPerTooth, s.pointIncrement, s.numTeeth, s.tempDecreasePerTooth, s.maxTransDist, s.magwalkFactorTrans, s.magwalkProbTrans, s.maxRotDegree, s.magwalkProbRot);
         time2 = System.nanoTime();
         stamp = timestamp(time1, time2);
@@ -65,7 +68,9 @@ public class Main {
 
         			}
     			}
-    			t -= delT; //Decrease temperature by decrement factor
+    			if (!s.staticTemp){
+					t -= delT; //Decrease temperature by decrement factor
+				}
     			if (t < 0) {
     				t = 0; //Prevents temperature from becoming negative, which causes issues
     			}
@@ -91,7 +96,7 @@ public class Main {
     		saveT *= toothScale;
     		t = saveT;
     		ptsPerTooth += ptsIncrement;
-			if (x == numTeeth - 1 && isDoubleCycle == false){
+			if (x == numTeeth - 1 && !isDoubleCycle && s.extraCycle){
 				t = 0;
 				isDoubleCycle = true;
 				x--;

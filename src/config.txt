@@ -1,19 +1,21 @@
 //Sawtooth Annealing Configuration Options
 //Use tab (not spaces) between label and value
 Max Temperature (K):	10000.0
-Moves per Point:	50000
+Moves per Point:	20000
 Points per Tooth:	10
 Points Added per Tooth:	0
 Number of Teeth:	4
 Temperature Decrease per Tooth:	0.8
-Max Translation Distance:	0.25
+Max Translation Distance (Angstroms):	0.25
 Magwalk Translation Multiplication Factor:	10.0
 Magwalk Translation Probability:	0.1
-Max Rotation (Rad):	0.523599
+Max Rotation (Radians):	0.523599
 Magwalk Rotation Probability:	0.1
 Length of Cubic Space:	5.0
 Max Failures During Propagation:	20
 Use Input.xyz (true/false):	true
+0K Finale (true/false):	false
+Static Temperature (true/false):	false
 
 //List of Molecules to be Used
 //Ex: H2O 2 <- 2 Molecules of H2O (separate molecular formula and number with space)
