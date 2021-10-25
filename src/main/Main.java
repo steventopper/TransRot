@@ -25,20 +25,26 @@ public class Main {
         long time2 = System.nanoTime();
         String stamp = timestamp(time1, time2);
         String str = s.write("Output0.xyz");
-        s.log("Initialization and propagation done in " + stamp + ".");
-        s.log("Cluster movement constrained within cube with side length " + s.size * 1.5 + ".");
-		s.log("Starting Energy: " + s.calcEnergy());
+        String initText = "Initialization ";
+        if (!s.useInput){
+        	initText += "and propagation ";
+		}
+        s.log(initText + "done in " + stamp);
+        s.log("Cluster movement constrained within cube with side length " + s.size * 1.5);
+        double startingEnergy = s.calcEnergy();
+		s.log("Starting Energy: " + startingEnergy);
         time1 = System.nanoTime();
         if (s.staticTemp){
         	s.numTeeth = 1;
+        	s.writeEnergy(startingEnergy);
 		}
-        sawtoothAnneal(s, s.maxTemperature, s.movePerPoint, s.pointsPerTooth, s.pointIncrement, s.numTeeth, s.tempDecreasePerTooth, s.maxTransDist, s.magwalkFactorTrans, s.magwalkProbTrans, s.maxRotDegree, s.magwalkProbRot);
+        sawtoothAnneal(s, s.maxTemperature, s.movePerPoint, s.pointsPerTooth, s.pointIncrement, s.numTeeth, s.tempDecreasePerTooth, s.maxTransDist, s.magwalkFactorTrans, s.magwalkProbTrans, s.maxRotDegree, s.magwalkProbRot, startingEnergy);
         time2 = System.nanoTime();
         stamp = timestamp(time1, time2);
 		s.log("Annealing done in " + stamp + ".");
     }
     
-    public static void sawtoothAnneal(Space s, double maxTemp, double numMovesPerPoint, int ptsPerTooth, int ptsIncrement, int numTeeth, double toothScale, double maxD, double magwalkFactorTrans, double magwalkProbTrans, double maxRot, double magwalkProbRot) {
+    public static void sawtoothAnneal(Space s, double maxTemp, double numMovesPerPoint, int ptsPerTooth, int ptsIncrement, int numTeeth, double toothScale, double maxD, double magwalkFactorTrans, double magwalkProbTrans, double maxRot, double magwalkProbRot, double startingEnergy) {
     	double t = maxTemp;
     	double saveT = t;
     	//Boolean used to check if final cycle
@@ -47,26 +53,26 @@ public class Main {
     		double delT = t / (ptsPerTooth - 1);
     		for (int y = 0; y < ptsPerTooth; y++) {
     			for (int z = 0; z < numMovesPerPoint; z++) {
+    				double energyChange = 0;
     				Molecule m = s.randMolecule(); //Pick a random molecule
     				if (r.nextDouble() >= 0.5 && m.atoms.size() > 1) { //If the rotation of m matters (more than 1 atom), 50% for either rotate or translate; otherwise just translate
                         if (r.nextDouble() >= magwalkProbRot) { //Chance to magwalk from config
-                            if (s.rotate(m, maxRot, t)) { }
+							energyChange = s.rotate(m, maxRot, t);
                         }
                         else {
-                            if (s.rotate(m, 2 * Math.PI, t)) {} //Magwalking sets rotation maximum to 2PI
+							energyChange = s.rotate(m, 2 * Math.PI, t); //Magwalking sets rotation maximum to 2PI
                         }
                     }
                     else{
                         if (r.nextDouble() >= magwalkProbTrans) { //Chance to magwalk from config
-                            if (s.move(m, maxD, t)) { }
+							energyChange = s.move(m, maxD, t);
                         }
                         else{
-                            if (s.move(m, maxD * magwalkFactorTrans, t)) { } //Magwalking multiplies distance maximum by magwalk factor (specified in config file)
+                            energyChange = s.move(m, maxD * magwalkFactorTrans, t); //Magwalking multiplies distance maximum by magwalk factor (specified in config file)
                         }
                     }
-        			if (z % 1000 == 0) {
-
-        			}
+					startingEnergy += energyChange;
+        			s.writeEnergy(startingEnergy);
     			}
     			if (!s.staticTemp){
 					t -= delT; //Decrease temperature by decrement factor

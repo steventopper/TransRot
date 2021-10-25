@@ -437,12 +437,12 @@ public class Space {
     	return totEnergy;
     }
     //Chooses whether to rotate molecule or not based on change in energy
-    public boolean rotate(Molecule m, double maxRot, double temp) {
+    public double rotate(Molecule m, double maxRot, double temp) {
         m.rotateTemp(maxRot); //Temporarily rotate molecule
         for (Atom a : m.atoms){
             if (a.tempx > size * 0.75 || a.tempx < size * -0.75 || a.tempy > size * 0.75 || a.tempy < size * -0.75 ||a.tempz > size * 0.75 || a.tempz < size * -0.75){
                 m.resetTemps();
-                return false;
+                return 0;
             }
         }
         double eStart = 0;
@@ -457,19 +457,19 @@ public class Space {
             double rand = r.nextDouble();
             if (temp == 0) { //If temperature is zero, formula fails but only decreases in energy should be accepted, so reject manually
                 m.resetTemps();
-                return false;
+                return 0;
             }
             double test = Math.pow(Math.E, -1 * (eEnd - eStart)/(BOLTZMANN_CONSTANT * temp));
             if (rand > test) {
                 m.resetTemps();
-                return false;
+                return 0;
             }
         }
         m.setTemps();
-        return true;
+        return eEnd - eStart;
     }
     //Chooses whether to move molecule or not based on change in energy
-    public boolean move(Molecule m, double maxD, double temp) {
+    public double move(Molecule m, double maxD, double temp) {
     	//Temporarily move molecule
         double x = (r.nextDouble() * 2 * maxD) - maxD;
     	double y = (r.nextDouble() * 2 * maxD) - maxD;
@@ -485,7 +485,7 @@ public class Space {
     	for (Atom a : m.atoms){
     	    if (a.tempx > size * 0.75 || a.tempx < size * -0.75 || a.tempy > size * 0.75 || a.tempy < size * -0.75 ||a.tempz > size * 0.75 || a.tempz < size * -0.75){
                 m.resetTemps();
-                return false;
+                return 0;
             }
         }
     	/**if (m.tempx > size * 1.5 || m.tempy > size * 1.5 || m.tempz > size * 1.5 || m.tempx < 0 || m.tempy < 0 || m.tempz < 0){ //If molecule would be moved out of valid space, reject the move
@@ -505,16 +505,16 @@ public class Space {
 			double rand = r.nextDouble();
 			if (temp == 0) { //If temperature is zero, formula fails but only decreases in energy should be accepted, so reject manually
 				m.resetTemps();
-				return false;
+				return 0;
 			}
 			double test = Math.pow(Math.E, -1 * (eEnd - eStart)/(BOLTZMANN_CONSTANT * temp));
 			if (rand > test) {
 				m.resetTemps();
-				return false;
+				return 0;
 			}
 		}
 		m.setTemps();
-		return true;
+		return eEnd - eStart;
     }
     public Molecule randMolecule() {
     	int x = r.nextInt(space.size());
@@ -583,8 +583,23 @@ public class Space {
             System.out.println(text);
         }
         catch (Exception exc){
-            System.out.println("Error in writing to log.txt");
+            System.out.println("Error in writing to log.txt.");
             System.exit(0);
+        }
+    }
+    //Appends energy values to energies.txt in dir if staticTemp = true
+    public void writeEnergy(double energy){
+        if (staticTemp){
+            try {
+                String pathName = dir + "/energies.txt";
+                FileWriter writer = new FileWriter(new File(pathName), true);
+                writer.write(energy + "\n");
+                writer.close();
+            }
+            catch (Exception exc){
+                System.out.println("Error in writing to energies.txt.");
+                System.exit(0);
+            }
         }
     }
 }
