@@ -118,7 +118,7 @@ public class Space {
             while (scanner.hasNextLine()){
                 //Parse file based on expected file format; if an issue is encountered, assume the file is improperly set up and throw an error
                 try {
-                    String[] words = scanner.nextLine().split("\t");
+                    String[] words = scanner.nextLine().split(" " + " +");
                     if (words.length == 1) {
                         int n;
                         try {
@@ -130,7 +130,7 @@ public class Space {
                         if (!scanner.hasNextLine()) {
                             throw new Exception();
                         }
-                        String[] s = scanner.nextLine().split("\t");
+                        String[] s = scanner.nextLine().split(" " + " +");
                         double radius = 0;
                         if (s.length != 2) {
                             throw new Exception();
@@ -138,7 +138,7 @@ public class Space {
                         radius = Double.parseDouble(s[1]);
                         String name = s[0];
                         for (int x = 0; x < n; x++) {
-                            String[] atom = scanner.nextLine().split("\t");
+                            String[] atom = scanner.nextLine().split(" " + " +");
                             if (atom.length != 10) {
                                 throw new Exception();
                             }
@@ -175,22 +175,22 @@ public class Space {
             scanner.nextLine();
             try {
                 //Read configs
-                maxTemperature = Double.parseDouble(scanner.nextLine().split("\t")[1]);
-                movePerPoint = Integer.parseInt(scanner.nextLine().split("\t")[1]);
-                pointsPerTooth = Integer.parseInt(scanner.nextLine().split("\t")[1]);
-                pointIncrement = Integer.parseInt(scanner.nextLine().split("\t")[1]);
-                numTeeth = Integer.parseInt(scanner.nextLine().split("\t")[1]);
-                tempDecreasePerTooth = Double.parseDouble(scanner.nextLine().split("\t")[1]);
-                maxTransDist = Double.parseDouble(scanner.nextLine().split("\t")[1]);
-                magwalkFactorTrans = Double.parseDouble(scanner.nextLine().split("\t")[1]);
-                magwalkProbTrans = Double.parseDouble(scanner.nextLine().split("\t")[1]);
-                maxRotDegree = Double.parseDouble(scanner.nextLine().split("\t")[1]);
-                magwalkProbRot = Double.parseDouble(scanner.nextLine().split("\t")[1]);
-                size = Double.parseDouble(scanner.nextLine().split("\t")[1]);
-                maxPropFailures = Integer.parseInt(scanner.nextLine().split("\t")[1]);
-                useInput = Boolean.parseBoolean(scanner.nextLine().split("\t")[1]);
-                extraCycle = Boolean.parseBoolean(scanner.nextLine().split("\t")[1]);
-                staticTemp = Boolean.parseBoolean(scanner.nextLine().split("\t")[1]);
+                maxTemperature = Double.parseDouble(scanner.nextLine().split(" " + " +")[1]); //Splits when 2 or more spaces are found
+                movePerPoint = Integer.parseInt(scanner.nextLine().split(" " + " +")[1]);
+                pointsPerTooth = Integer.parseInt(scanner.nextLine().split(" " + " +")[1]);
+                pointIncrement = Integer.parseInt(scanner.nextLine().split(" " + " +")[1]);
+                numTeeth = Integer.parseInt(scanner.nextLine().split(" " + " +")[1]);
+                tempDecreasePerTooth = Double.parseDouble(scanner.nextLine().split(" " + " +")[1]);
+                maxTransDist = Double.parseDouble(scanner.nextLine().split(" " + " +")[1]);
+                magwalkFactorTrans = Double.parseDouble(scanner.nextLine().split(" " + " +")[1]);
+                magwalkProbTrans = Double.parseDouble(scanner.nextLine().split(" " + " +")[1]);
+                maxRotDegree = Double.parseDouble(scanner.nextLine().split(" " + " +")[1]);
+                magwalkProbRot = Double.parseDouble(scanner.nextLine().split(" " + " +")[1]);
+                size = Double.parseDouble(scanner.nextLine().split(" " + " +")[1]);
+                maxPropFailures = Integer.parseInt(scanner.nextLine().split(" " + " +")[1]);
+                useInput = Boolean.parseBoolean(scanner.nextLine().split(" " + " +")[1]);
+                extraCycle = Boolean.parseBoolean(scanner.nextLine().split(" " + " +")[1]);
+                staticTemp = Boolean.parseBoolean(scanner.nextLine().split(" " + " +")[1]);
                 //Skip 3 lines for comments
                 scanner.nextLine();
                 scanner.nextLine();

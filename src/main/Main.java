@@ -43,7 +43,7 @@ public class Main {
         stamp = timestamp(time1, time2);
 		s.log("Annealing done in " + stamp + ".");
     }
-    
+
     public static void sawtoothAnneal(Space s, double maxTemp, double numMovesPerPoint, int ptsPerTooth, int ptsIncrement, int numTeeth, double toothScale, double maxD, double magwalkFactorTrans, double magwalkProbTrans, double maxRot, double magwalkProbRot, double startingEnergy) {
     	double t = maxTemp;
     	double saveT = t;
@@ -80,22 +80,6 @@ public class Main {
     			if (t < 0) {
     				t = 0; //Prevents temperature from becoming negative, which causes issues
     			}
-
-    			/**double percentAccepted = c / numMovesPerPoint;
-				if (percentAccepted < 0.3) {
-    				maxDTemp *= 0.8;
-    				maxRotTemp *= 0.8;
-    				//System.out.println(percentAccepted);
-    			}
-    			else if (percentAccepted > 0.7) {
-    				maxDTemp *= 1.2;
-    				maxRotTemp *= 1.2;
-    				if (maxRotTemp > Math.PI * 2) {
-    					maxRotTemp = Math.PI * 2;
-    				}
-    				//System.out.println(percentAccepted);
-    			}**/
-    			//c = 0;
 
     			s.writeMovie("Output" + x + "_" + (x + 1) + "_Movie.xyz");
     		}
