@@ -1,4 +1,4 @@
-# TransRot Version 1.4.8
+# TransRot Version 1.4.9
 
 Steven L. Topper and Robert Q. Topper\
 School of Engineering\
@@ -15,7 +15,7 @@ The code uses a combination of two specific methods designed to overcome quasi-e
 
 TransRot assumes that all molecules are internally rigid throughout the simulation, i.e., each attempted Monte Carlo move is either a translation of the molecule’s center of mass or a rigid-body rotation of the molecule about a randomly chosen space-fixed axis with its origin at the center of mass. Individual atoms or atomic ions can also be simulated using TransRot, using only translational move attempts. 
 
-Defining a “particle” to be either an atom or a molecule, all particles interact with one another according to an effective pair potential (the code is currently limited to interaction sites centered on the atoms within each particle). The geometry of each particle as well as the parameters of the pairwise interaction potential must be chosen by the user, and are supplied within an input file, with the format described below (see “How to add new molecules to the database”).
+Defining a “particle” to be either an atom or a molecule, all particles interact with one another according to an effective pair potential (the code is currently limited to interaction sites centered on the atoms within each particle). The geometry of each particle as well as the parameters of the pairwise interaction potential must be chosen by the user, and are supplied within an input file, with the format described below (see "How to Add New Molecules to the Database").
 
 In the current version, TransRot does not itself fully optimize the set of final structures predicted at the end of the annealing schedule. It is intended that the user pass the final structures predicted by TransRot to other programs (including Psi4, Q-Chem, Spartan and Gaussian) for full geometry optimization using quantum mechanics methods. We anticipate adding full geometry optimization of the final structures in a future version.
 
@@ -47,7 +47,7 @@ TransRot comes with a sample database file that contains entries for the three p
     <li>Cl-</li>
     <li>H2O</li>
 </ul>
-The cluster to be studied can consist of any desired number of any of the particles defined within the database, as specified in the config file (see below). Other atoms or molecules can be added to the database as needed, see “How to Add New Molecules to the Database”. 
+The cluster to be studied can consist of any desired number of any of the particles defined within the database, as specified in the config file (see below). Other atoms or molecules can be added to the database as needed, see "How to Add New Molecules to the Database". 
 
 A sample config file is also included in the TransRot directory, which can be used for a low-accuracy test run of the program’s systems. The config file contains run instructions for an 8-particle cluster with four NH4+ molecules and four Cl- atoms, cooled gradually from 10,000K to 0K. To run this test system, use your computer’s command line to navigate to the TransRot directory and run the command 
 <pre><code>java -jar Transrot.jar</code></pre>
@@ -63,7 +63,7 @@ After the test simulation completes four teeth and exits, there will be a new fo
 
 ## How to customize run parameters
 
-All run parameters are set in config.txt. **VERY IMPORTANT:** Each parameter must be separated from its label by a **tab**.
+All run parameters are set in config.txt. **VERY IMPORTANT:** Each parameter must be separated from its label by **at least 2 spaces**.
 <ul>
     <li>Max Temperature (K): Starting temperature of the annealing process, from which the cluster will be cooled down to 0K in the first cooling cycle.</li>
     <li>Moves per Point: Number of attempted translations or rotations per temperature segment.</li>
@@ -81,10 +81,14 @@ All run parameters are set in config.txt. **VERY IMPORTANT:** Each parameter mus
     <li>Use Input.xyz (true/false): Disables generation of a random cluster, instead using Input.xyz as the starting cluster. Input.xyz uses the standard .xyz file format, with the comment line denotating the number of atoms per molecule, as read from top to bottom, separated by spaces.
         </br>Example: For an Input.xyz file containing 3 ammonium ions, followed by 4 chloride ions, followed by 1 ammonium ion, the comment line would be: <pre> 5 5 5 1 1 1 1 5 </pre> <b>Important:</b> While this option is enabled, Length of Cubic Space will not automatically increase and must be manually set to a proper value.</li>
     <li>0K Finale (true/false): Enables the final tooth to repeat itself at a static temperature of 0K. The output file for this tooth replaces the output file for the final tooth, and its movie file will be appended to the final output movie file.</li>
-    <li>Static Temperature: When enabled, Number of Teeth will automatically be set to 1. During this tooth, the temperature will remain at the starting temperature.</li>
+    <li>Static Temperature (true/false): This option is designed to help with determining other values such as Max Translation Distance. When enabled, Number of Teeth will automatically be set to 1. During this tooth, the temperature will remain at the starting temperature. The cluster's energy after each move will also be recorded to energies.txt.</li>
+    <li>Use Pairwise Interaction Parameters (true/false): This option allows users to use custom combination rules to determine interaction parameters between various atoms. When enabled, Ai, Bi, Ci, and Di will be read from pairwise.txt instead of dbase.txt. These values must be set individually for each unique combination of atoms in the cluster.
+</br>When adding pairwise interactions to pairwise.txt, all numbers or symbols on the same row must be separated by **at least 2 spaces**. The format for apending an interaction is shown below:
+</br>First Atomic Symbol &nbsp; Second Atomic Symbol &nbsp; Ai &nbsp; Bi &nbsp; Ci &nbsp; Di
+</br>For more information regarding these parameters, see "How to Add New Molecules to the Database".</li>
 </ul>
     
-The particles to be used in the simulation are set at the bottom of config.txt. Each line includes the molecular formula of a particle followed by the number of that particle to be included, separated by a **space**. The default config.txt contains setup for an ammonium chloride cluster with 4 ammonium ions and 4 chloride ions, as follows:\
+The particles to be used in the simulation are set at the bottom of config.txt. Each line includes the molecular formula of a particle followed by the number of that particle to be included, separated by **one space**. The default config.txt contains setup for an ammonium chloride cluster with 4 ammonium ions and 4 chloride ions, as follows:\
 NH4+ 4\
 Cl- 4 
 
@@ -115,13 +119,13 @@ Interactions between unlike atoms (i,j) on different particles are obtained with
 <img src=https://user-images.githubusercontent.com/6625247/132400815-5e64203d-a145-48f1-b484-a354d82b8bf0.PNG width=18% height=18%> \
 Geometric averages are used for the (A,C,D) parameters, as in \
 <img src=https://user-images.githubusercontent.com/6625247/132400916-4a47e403-6b84-4136-8aa5-ccfa4c98fd0c.PNG width=15% height=15%> \
-When adding entries for a particle to the dbase, all numbers or symbols on the same row must be separated by **tabs**. The format for appending a particle is shown below:
+When adding entries for a particle to the dbase, all numbers or symbols on the same row must be separated by **at least 2 spaces**. The format for appending a particle is shown below:
 
 Number of Atoms In Particle \
 Molecular Formula Molecular Radius (for random placement purposes only) \
 Atomic Symbol &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; x &nbsp; &nbsp; &nbsp; y &nbsp; &nbsp; &nbsp; z &nbsp; &nbsp; &nbsp; A &nbsp; &nbsp; &nbsp; B &nbsp; &nbsp; &nbsp; C &nbsp; &nbsp; &nbsp; D &nbsp; &nbsp; &nbsp; Q &nbsp; &nbsp; &nbsp; mass \
 Atomic Symbol &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; x &nbsp; &nbsp; &nbsp; y &nbsp; &nbsp; &nbsp; z &nbsp; &nbsp; &nbsp; A &nbsp; &nbsp; &nbsp; B &nbsp; &nbsp; &nbsp; C &nbsp; &nbsp; &nbsp; D &nbsp; &nbsp; &nbsp; Q &nbsp; &nbsp; &nbsp; mass \
-...
+... \
 Continued for each atom in the particle
 
 For comparison, the parameters provided in the sample dbase file are appropriate for simulations of H2O clusters using the TIP3P interaction potential due to Jorgensen et al. (5) and are at the present time documented correctly on Wikipedia (6). In our testing, TransRot was used to successfully find the global minimum-energy structures of TIP3P water clusters (H2O)n with (n=2-8). (7)
@@ -131,6 +135,11 @@ For comparison, the parameters provided in the sample dbase file are appropriate
     <li>Wikipedia contributors, "Water model," Wikipedia, The Free Encyclopedia, https://en.wikipedia.org/w/index.php?title=Water_model&oldid=1035969800 (accessed September 7, 2021).</li>
     <li>Wales DJ, Hodges MP (1998). “Global minima of water clusters (H2O)n, n le 21, described by an empirical potential”. Chemical Physics Letters 286: 65-72.</li>
 </ol>
+
+## Massless Interaction Points
+Massless interaction points can be defined in the database by including an asterisk (\*), anywhere in the atomic symbol. \
+Massless interaction points do not contribute towards the center of mass of the particle and will not be written into output files or output movie files. \
+A particle cannot be made entirely out of massless interaction points; it must contain at least one atom.
 
 ## How to report bugs, issues, or feature requests
 
