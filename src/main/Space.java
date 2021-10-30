@@ -119,10 +119,12 @@ public class Space {
             pathName = URLDecoder.decode(pathName, "utf-8");
             pathName = "/" + pathName.substring(1,pathName.lastIndexOf("/")) + "/dbase.txt";
             Scanner scanner = new Scanner(new File(pathName));
+            int currLine = 0; //Used to print line during error detection
             while (scanner.hasNextLine()){
                 //Parse file based on expected file format; if an issue is encountered, assume the file is improperly set up and throw an error
                 try {
                     String[] words = scanner.nextLine().split(" " + " +");
+                    currLine++;
                     if (words.length == 1) {
                         int n;
                         try {
@@ -135,6 +137,7 @@ public class Space {
                             throw new Exception();
                         }
                         String[] s = scanner.nextLine().split(" " + " +");
+                        currLine++;
                         double radius = 0;
                         if (s.length != 2) {
                             throw new Exception();
@@ -144,8 +147,9 @@ public class Space {
                         int numGhosts = 0;
                         for (int x = 0; x < n; x++) {
                             String[] atom = scanner.nextLine().split(" " + " +");
+                            currLine++;
                             if (atom.length != 10) {
-                                throw new Exception("");
+                                throw new Exception();
                             }
                             Atom a = new Atom(atom[0], Double.parseDouble(atom[1]), Double.parseDouble(atom[2]), Double.parseDouble(atom[3]), Double.parseDouble(atom[4]), Double.parseDouble(atom[5]), Double.parseDouble(atom[6]), Double.parseDouble(atom[7]), Double.parseDouble(atom[8]), Double.parseDouble(atom[9]));
                             atoms.add(a);
@@ -154,7 +158,7 @@ public class Space {
                             }
                         }
                         if (numGhosts == n){
-                            System.out.println("Error: Molecule " + name + " cannot be comprised of only ghost atoms.");
+                            System.out.println("Error on line" + currLine + " in dbase.txt: Molecule " + name + " cannot be comprised of only ghost atoms.");
                             System.exit(0);
                         }
                         Molecule m = new Molecule(name, radius, atoms);
@@ -162,7 +166,7 @@ public class Space {
                     }
                 }
                 catch (Exception exc){
-                    System.out.println("Error: File dbase.txt incorrectly formatted.");
+                    System.out.println("Error on line " + currLine + " in dbase.txt: File incorrectly formatted.");
                     scanner.close();
                     System.exit(0);
                 }
@@ -182,52 +186,72 @@ public class Space {
             pathName = URLDecoder.decode(pathName, "utf-8");
             pathName = "/" + pathName.substring(1, pathName.lastIndexOf("/")) + "/config.txt";
             Scanner scanner = new Scanner(new File(pathName));
+            int currLine = 3; //Tracks current line for error printing
             //Skip 2 lines for comments
             scanner.nextLine();
             scanner.nextLine();
             try {
-                //Read configs
-                maxTemperature = Double.parseDouble(scanner.nextLine().split(" " + " +")[1]); //Splits when 2 or more spaces are found
+                //Read configs; splits when 2 or more spaces are found
+                maxTemperature = Double.parseDouble(scanner.nextLine().split(" " + " +")[1]);
+                currLine++;
                 movePerPoint = Integer.parseInt(scanner.nextLine().split(" " + " +")[1]);
+                currLine++;
                 pointsPerTooth = Integer.parseInt(scanner.nextLine().split(" " + " +")[1]);
+                currLine++;
                 pointIncrement = Integer.parseInt(scanner.nextLine().split(" " + " +")[1]);
+                currLine++;
                 numTeeth = Integer.parseInt(scanner.nextLine().split(" " + " +")[1]);
+                currLine++;
                 tempDecreasePerTooth = Double.parseDouble(scanner.nextLine().split(" " + " +")[1]);
+                currLine++;
                 maxTransDist = Double.parseDouble(scanner.nextLine().split(" " + " +")[1]);
+                currLine++;
                 magwalkFactorTrans = Double.parseDouble(scanner.nextLine().split(" " + " +")[1]);
+                currLine++;
                 magwalkProbTrans = Double.parseDouble(scanner.nextLine().split(" " + " +")[1]);
+                currLine++;
                 maxRotDegree = Double.parseDouble(scanner.nextLine().split(" " + " +")[1]);
+                currLine++;
                 magwalkProbRot = Double.parseDouble(scanner.nextLine().split(" " + " +")[1]);
+                currLine++;
                 size = Double.parseDouble(scanner.nextLine().split(" " + " +")[1]);
+                currLine++;
                 maxPropFailures = Integer.parseInt(scanner.nextLine().split(" " + " +")[1]);
+                currLine++;
                 useInput = Boolean.parseBoolean(scanner.nextLine().split(" " + " +")[1]);
+                currLine++;
                 extraCycle = Boolean.parseBoolean(scanner.nextLine().split(" " + " +")[1]);
+                currLine++;
                 staticTemp = Boolean.parseBoolean(scanner.nextLine().split(" " + " +")[1]);
+                currLine++;
                 isPairwise = Boolean.parseBoolean(scanner.nextLine().split(" " + " +")[1]);
+                currLine++;
                 //Skip 3 lines for comments
                 scanner.nextLine();
                 scanner.nextLine();
                 scanner.nextLine();
+                currLine += 2;
                 //Read molecules to place
                 while (scanner.hasNextLine()) {
                     String line = scanner.nextLine();
+                    currLine++;
                     String name = line.split(" ")[0];
                     int num = Integer.parseInt(line.split(" ")[1]);
                     for (int x = 0; x < num; x++) {
                         if (!add(name)) {
-                            System.out.println("Error: Unable to find molecule '" + name + "' in database.");
+                            System.out.println("Error on line " + currLine + " in config.txt: Unable to find molecule '" + name + "' in dbase.txt.");
                             System.exit(0);
                         }
                     }
                 }
             }
             catch (Exception exc){
-                System.out.println("Error: File config.txt incorrectly formatted.");
+                System.out.println("Error on line " + currLine + " in config.txt: File incorrectly formatted.");
                 System.exit(0);
             }
         }
         catch (Exception exc){
-            System.out.println("Error: File  " + dir + "/config.txt not found.");
+            System.out.println("Error: File config.txt not found.");
             System.exit(0);
         }
     }
@@ -238,10 +262,12 @@ public class Space {
             pathName = URLDecoder.decode(pathName, "utf-8");
             pathName = "/" + pathName.substring(1, pathName.lastIndexOf("/")) + "/Input.xyz";
             Scanner scanner = new Scanner(new File(pathName));
+            int currLine = 1; //Tracks current line for error printing
             //Skip next line, since we don't care about the total number of atoms, we get it all from the comment on the next line
             scanner.nextLine();
             try {
                 String[] atomNums = scanner.nextLine().split(" ");
+                currLine++;
                 for (int x = 0; x < atomNums.length; x++){
                     int atomNum = Integer.parseInt(atomNums[x]);
                     //Four arrays used for temporary storage, never get too large since they're overwritten for each molecule
@@ -251,6 +277,7 @@ public class Space {
                     double[] atomZs = new double[atomNum];
                     for (int y = 0; y < atomNum; y++){
                         String[] atomVals = scanner.nextLine().split(" +"); //splits by all sets of spaces > 1
+                        currLine++;
                         //If line is preceded by space, everything breaks since we get atomVals[0] == "". So, if that's true, start from 1.
                         int c = 0;
                         if (atomVals[0].equals("")){
@@ -305,7 +332,7 @@ public class Space {
                 }
             }
             catch (Exception exc){
-                System.out.println("Error: File Input.xyz incorrectly formatted.");
+                System.out.println("Error on line" + currLine + " in Input.xyz: File incorrectly formatted.");
                 System.exit(0);
             }
         }
@@ -323,9 +350,11 @@ public class Space {
             pathName = URLDecoder.decode(pathName, "utf-8");
             pathName = "/" + pathName.substring(1, pathName.lastIndexOf("/")) + "/pairwise.txt";
             Scanner scanner = new Scanner(new File(pathName));
+            int currLine = 0; //Tracks current line for error printing
             while (scanner.hasNextLine()){
                 try {
                     String[] line = scanner.nextLine().split(" " + " +");
+                    currLine++;
                     if (line.length != 6) {
                         throw new Exception();
                     }
@@ -336,7 +365,7 @@ public class Space {
                     pairwiseDbase.put(key2, value);
                 }
                 catch (Exception exc){
-                    System.out.println("Error: File pairwise.txt incorrectly formatted.");
+                    System.out.println("Error on line " + currLine + " in pairwise.txt: File incorrectly formatted.");
                     System.exit(0);
                 }
             }
@@ -389,7 +418,7 @@ public class Space {
             }
         }
         catch (Exception exc){
-            System.out.println("Error: Failed to create directory.");
+            System.out.println("Error: Failed to create new directory.");
             System.exit(0);
         }
     }
@@ -419,7 +448,7 @@ public class Space {
                 	for (int b = 0; b + x[1].length() < 10; b++) {
                 		content += "0";
                 	}
-                    
+
                 	String[] y = Double.toString(Precision.round(a.y, 10, BigDecimal.ROUND_HALF_UP)).split("\\.");
                     content += "  ";
                     for (int b = 0; b + y[0].length() < 4; b++) {
@@ -429,7 +458,7 @@ public class Space {
                 	for (int b = 0; b + y[1].length() < 10; b++) {
                 		content += "0";
                 	}
-                	
+
                 	String[] z = Double.toString(Precision.round(a.z, 10, BigDecimal.ROUND_HALF_UP)).split("\\.");
                     content += "  ";
                     for (int b = 0; b + z[0].length() < 4; b++) {
@@ -446,6 +475,8 @@ public class Space {
             return pathName;
         }
         catch(Exception exc){
+            System.out.println("Error: Failed to write to " + dir + "/" + fileName + ".");
+            System.exit(0);
             return "Error";
         }
     }
@@ -594,7 +625,7 @@ public class Space {
                 	for (int b = 0; b + x[1].length() < 10; b++) {
                 		content += "0";
                 	}
-                    
+
                 	String[] y = Double.toString(Precision.round(a.y, 10, BigDecimal.ROUND_HALF_UP)).split("\\.");
                     content += "  ";
                     for (int b = 0; b + y[0].length() < 4; b++) {
@@ -604,7 +635,7 @@ public class Space {
                 	for (int b = 0; b + y[1].length() < 10; b++) {
                 		content += "0";
                 	}
-                	
+
                 	String[] z = Double.toString(Precision.round(a.z, 10, BigDecimal.ROUND_HALF_UP)).split("\\.");
                     content += "  ";
                     for (int b = 0; b + z[0].length() < 4; b++) {
@@ -621,6 +652,8 @@ public class Space {
             return pathName;
         }
         catch(Exception exc){
+            System.out.println("Error: Failed to write to " + dir + "/" + fileName + ".");
+            System.exit(0);
             return "Error";
         }
     }
@@ -634,7 +667,7 @@ public class Space {
             System.out.println(text);
         }
         catch (Exception exc){
-            System.out.println("Error in writing to log.txt.");
+            System.out.println("Error: Failed to write to " + dir + "/log.txt.");
             System.exit(0);
         }
     }
@@ -648,7 +681,7 @@ public class Space {
                 writer.close();
             }
             catch (Exception exc){
-                System.out.println("Error in writing to energies.txt.");
+                System.out.println("Error: Failed to writer to " + dir + "/energies.txt.");
                 System.exit(0);
             }
         }
