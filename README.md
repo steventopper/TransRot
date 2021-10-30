@@ -1,4 +1,4 @@
-# TransRot Version 1.4.7
+# TransRot Version 1.4.8
 
 Steven L. Topper and Robert Q. Topper\
 School of Engineering\
@@ -106,8 +106,8 @@ The double sums above are meant to imply that all of the interactions are summed
 Parameter  &nbsp;&nbsp;&nbsp;&nbsp;  Database Units \
 Aii  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;  kcal/mole \
 Bii  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;  (Angstroms)^{-1} \
-Cij  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;  kcal / (Angstroms^12)(mole) \
-Dij  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;  kcal / (Angstroms^6)(mole) \
+Cij  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;  kcal / (Angstroms^6)(mole) \
+Dij  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;  kcal / (Angstroms^12)(mole) \
 qi  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;  atomic units of charge (here the charge of the electron = 1 exactly) \
 Massi  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;  amu (the mass of carbon-12 is 12.000 amu)
 
