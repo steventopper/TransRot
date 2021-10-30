@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Scanner;
 import org.apache.commons.math3.random.MersenneTwister;
+import org.apache.commons.math3.util.Pair;
 import org.apache.commons.math3.util.Precision;
 import java.time.LocalDateTime;
 
@@ -28,12 +29,14 @@ public class Space {
     boolean useInput;
     boolean extraCycle;
     boolean staticTemp;
+    boolean isPairwise;
 
     private String dir; //Directory of .xyz files to be saved in, created at runtime
 
     private ArrayList<Molecule> list;
     private ArrayList<Molecule> space;
     private ArrayList<Molecule> dbase;
+    private HashMap<Pair<String, String>, double[]> pairwiseDbase;
     private MersenneTwister r = new MersenneTwister(); //Used instead of Java.Random for greater accuracy in randomization
     private static final double BOLTZMANN_CONSTANT = 0.0019872;
     public Space(double s){
@@ -41,6 +44,7 @@ public class Space {
         list = new ArrayList<>();
         space = new ArrayList<>();
         dbase = new ArrayList<>();
+        pairwiseDbase = new HashMap<>();
     }
     //Adds molecule to space from config file string
     public boolean add(String s){ //Adds larger molecules to be placed first, to lower chance of overlap later
@@ -191,6 +195,7 @@ public class Space {
                 useInput = Boolean.parseBoolean(scanner.nextLine().split(" " + " +")[1]);
                 extraCycle = Boolean.parseBoolean(scanner.nextLine().split(" " + " +")[1]);
                 staticTemp = Boolean.parseBoolean(scanner.nextLine().split(" " + " +")[1]);
+                isPairwise = Boolean.parseBoolean(scanner.nextLine().split(" " + " +")[1]);
                 //Skip 3 lines for comments
                 scanner.nextLine();
                 scanner.nextLine();
@@ -301,8 +306,38 @@ public class Space {
             System.exit(0);
         }
     }
-
-
+    public void readPairwise(){
+        if (!isPairwise){
+            return;
+        }
+        try {
+            String pathName = Main.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+            pathName = URLDecoder.decode(pathName, "utf-8");
+            pathName = "/" + pathName.substring(1, pathName.lastIndexOf("/")) + "/pairwise.txt";
+            Scanner scanner = new Scanner(new File(pathName));
+            while (scanner.hasNextLine()){
+                try {
+                    String[] line = scanner.nextLine().split(" " + " +");
+                    if (line.length != 6) {
+                        throw new Exception();
+                    }
+                    Pair<String, String> key1 = new Pair<>(line[0], line[1]);
+                    Pair<String, String> key2 = new Pair<>(line[1], line[0]);
+                    double[] value = {Double.parseDouble(line[2]), Double.parseDouble(line[3]), Double.parseDouble(line[4]), Double.parseDouble(line[5])};
+                    pairwiseDbase.put(key1, value);
+                    pairwiseDbase.put(key2, value);
+                }
+                catch (Exception exc){
+                    System.out.println("Error: File pairwise.txt incorrectly formatted.");
+                    System.exit(0);
+                }
+            }
+        }
+        catch (Exception exc){
+            System.out.println("Error: File pairwise.txt not found.");
+            System.exit(0);
+        }
+    }
     //Creates new directory to place output files into
     public void makeDirectory(){
         //Get current datetime and create directory name
@@ -430,7 +465,7 @@ public class Space {
     	for (int x = 0; x < space.size(); x++) {
     		for (int y = 0; y < space.size(); y++) {
     			if (y > x) {
-    				totEnergy += space.get(x).calcEnergy(space.get(y));
+    				totEnergy += space.get(x).calcEnergy(space.get(y), isPairwise, pairwiseDbase);
     			}
     		}
     	}
@@ -449,8 +484,8 @@ public class Space {
         double eEnd = 0;
         for (Molecule n : space) { //Calculate energy based on both current position and temporary position
             if (m != n) {
-                eStart += m.calcEnergy(n);
-                eEnd += m.calcTempEnergy(n);
+                eStart += m.calcEnergy(n, isPairwise, pairwiseDbase);
+                eEnd += m.calcTempEnergy(n, isPairwise, pairwiseDbase);
             }
         }
         if (eEnd - eStart > 0) { //If energy increases, certain chance to accept move based on boltzmann constant and temperature
@@ -496,8 +531,8 @@ public class Space {
     	double eEnd = 0;
 		for (Molecule n : space) {
 			if (m != n) {
-				eStart += m.calcEnergy(n);
-				eEnd += m.calcTempEnergy(n);
+				eStart += m.calcEnergy(n, isPairwise, pairwiseDbase);
+				eEnd += m.calcTempEnergy(n, isPairwise, pairwiseDbase);
 			}
 		}
 		//double delEnergy = eEnd - eStart;

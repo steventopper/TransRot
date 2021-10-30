@@ -11,6 +11,10 @@ public class Main {
         long time1 = System.nanoTime();
     	s.readDB();
     	s.readCFG();
+		if (s.isPairwise){
+			//Read pairwise interaction params from pairwise.txt
+			s.readPairwise();
+		}
     	if (s.useInput) {
     		//Read molecules from Input.xyz, do not propagate
 			s.readInput();

@@ -3,6 +3,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import org.apache.commons.math3.random.MersenneTwister;
+import org.apache.commons.math3.util.Pair;
 
 public class Molecule {
     String name;
@@ -96,21 +97,21 @@ public class Molecule {
         }
     }
     //Calculates energy for each atom in molecule based on full positions
-    public double calcEnergy (Molecule m) {
+    public double calcEnergy (Molecule m, boolean isPairwise, HashMap<Pair<String, String>, double[]> pairwiseDbase) {
     	double energy = 0;
     	for (Atom a : atoms) {
     		for (Atom b : m.atoms) {
-    			energy += a.calcEnergy(b);
+    			energy += a.calcEnergy(b, isPairwise, pairwiseDbase);
     		}
     	}
     	return energy;
     }
     //Calculates energy for each atom in molecule based on temp positions
-    public double calcTempEnergy (Molecule m) {
+    public double calcTempEnergy (Molecule m, boolean isPairwise, HashMap<Pair<String, String>, double[]> pairwiseDbase) {
     	double energy = 0;
     	for (Atom a : atoms) {
     		for (Atom b : m.atoms) {
-    			energy += a.calcTempEnergy(b);
+    			energy += a.calcTempEnergy(b, isPairwise, pairwiseDbase);
     		}
     	}
     	return energy;

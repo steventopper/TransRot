@@ -1,4 +1,8 @@
 package main;
+
+import org.apache.commons.math3.util.Pair;
+import java.util.HashMap;
+
 public class Atom {
 	private static final double K_VALUE = 332.0587;
     String symbol;
@@ -55,20 +59,57 @@ public class Atom {
         mass = atom.mass;
     }
     //Calculates energy based on atom full position
-    public double calcEnergy(Atom atom) { //Calculates energy compared to rest of system, instead of total energy of system
-    	double A = Math.sqrt(this.a * atom.a);
-    	double B = (this.b + atom.b) / 2;
-    	double C = Math.sqrt(this.c * atom.c);
-    	double D = Math.sqrt(this.d * atom.d);
+    public double calcEnergy(Atom atom, boolean isPairwise, HashMap<Pair<String, String>, double[]> pairwiseDbase) { //Calculates energy compared to rest of system, instead of total energy of system
+        double A;
+        double B;
+        double C;
+        double D;
+        if (isPairwise){
+            Pair<String, String> key = new Pair<>(this.symbol, atom.symbol);
+            double[] value = pairwiseDbase.get(key);
+            if (value == null){
+                System.out.println("Error: pairwise.txt does not contain a pairing for " + this.symbol + " and " + atom.symbol + ".");
+                System.exit(0);
+            }
+            A = value[0];
+            B = value[1];
+            C = value[2];
+            D = value[3];
+        }
+        else {
+            A = Math.sqrt(this.a * atom.a);
+            B = (this.b + atom.b) / 2;
+            C = Math.sqrt(this.c * atom.c);
+            D = Math.sqrt(this.d * atom.d);
+        }
     	double r = Math.sqrt(Math.pow(atom.x - x, 2) + Math.pow(atom.y - y, 2) + Math.pow(atom.z - z, 2)); //Distance between atoms
     	return (K_VALUE * this.q * atom.q / r) + A * Math.exp(-1 * B * r) - (C / Math.pow(r,  6)) + (D / Math.pow(r,  12));
     }
    // Calculates energy based on atom temp position
-    public double calcTempEnergy(Atom atom) { //Calculates energy compared to rest of system, instead of total energy of system
-    	double A = Math.sqrt(this.a * atom.a);
-    	double B = (this.b + atom.b) / 2;
-    	double C = Math.sqrt(this.c * atom.c);
-    	double D = Math.sqrt(this.d * atom.d);
+    public double calcTempEnergy(Atom atom, boolean isPairwise, HashMap<Pair<String, String>, double[]> pairwiseDbase) { //Calculates energy compared to rest of system, instead of total energy of system
+        double A;
+        double B;
+        double C;
+        double D;
+        double Q;
+        if (isPairwise){
+            Pair<String, String> key = new Pair<>(this.symbol, atom.symbol);
+            double[] value = pairwiseDbase.get(key);
+            if (value == null){
+                System.out.println("Error: pairwise.txt does not contain a pairing for " + this.symbol + " and " + atom.symbol + ".");
+                System.exit(0);
+            }
+            A = value[0];
+            B = value[1];
+            C = value[2];
+            D = value[3];
+        }
+        else {
+            A = Math.sqrt(this.a * atom.a);
+            B = (this.b + atom.b) / 2;
+            C = Math.sqrt(this.c * atom.c);
+            D = Math.sqrt(this.d * atom.d);
+        }
     	double r = Math.sqrt(Math.pow(atom.x - tempx, 2) + Math.pow(atom.y - tempy, 2) + Math.pow(atom.z - tempz, 2)); //Distance between atoms
     	return (K_VALUE * this.q * atom.q / r) + A * Math.exp(-1 * B * r) - (C / Math.pow(r,  6)) + (D / Math.pow(r,  12));
     }
