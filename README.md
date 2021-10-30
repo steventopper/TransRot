@@ -15,7 +15,7 @@ The code uses a combination of two specific methods designed to overcome quasi-e
 
 TransRot assumes that all molecules are internally rigid throughout the simulation, i.e., each attempted Monte Carlo move is either a translation of the molecule’s center of mass or a rigid-body rotation of the molecule about a randomly chosen space-fixed axis with its origin at the center of mass. Individual atoms or atomic ions can also be simulated using TransRot, using only translational move attempts. 
 
-Defining a “particle” to be either an atom or a molecule, all particles interact with one another according to an effective pair potential (the code is currently limited to interaction sites centered on the atoms within each particle). The geometry of each particle as well as the parameters of the pairwise interaction potential must be chosen by the user, and are supplied within an input file, with the format described below (see "How to Add New Molecules to the Database").
+Defining a “particle” to be either an atom or a molecule, all particles interact with one another according to an effective pair potential. The geometry of each particle as well as the parameters of the pairwise interaction potential must be chosen by the user, and are supplied within an input file, with the format described below (see "How to Add New Molecules to the Database").
 
 In the current version, TransRot does not itself fully optimize the set of final structures predicted at the end of the annealing schedule. It is intended that the user pass the final structures predicted by TransRot to other programs (including Psi4, Q-Chem, Spartan and Gaussian) for full geometry optimization using quantum mechanics methods. We anticipate adding full geometry optimization of the final structures in a future version.
 
@@ -137,7 +137,7 @@ For comparison, the parameters provided in the sample dbase file are appropriate
 </ol>
 
 ## Massless Interaction Points
-Massless interaction points can be defined in the database by including an asterisk (\*), anywhere in the atomic symbol. \
+Massless interaction points can be defined in the database by including an asterisk (\*) anywhere in the atomic symbol. \
 Massless interaction points do not contribute towards the center of mass of the particle and will not be written into output files or output movie files. \
 A particle cannot be made entirely out of massless interaction points; it must contain at least one atom.
 
