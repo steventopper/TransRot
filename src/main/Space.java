@@ -141,13 +141,21 @@ public class Space {
                         }
                         radius = Double.parseDouble(s[1]);
                         String name = s[0];
+                        int numGhosts = 0;
                         for (int x = 0; x < n; x++) {
                             String[] atom = scanner.nextLine().split(" " + " +");
                             if (atom.length != 10) {
-                                throw new Exception();
+                                throw new Exception("");
                             }
                             Atom a = new Atom(atom[0], Double.parseDouble(atom[1]), Double.parseDouble(atom[2]), Double.parseDouble(atom[3]), Double.parseDouble(atom[4]), Double.parseDouble(atom[5]), Double.parseDouble(atom[6]), Double.parseDouble(atom[7]), Double.parseDouble(atom[8]), Double.parseDouble(atom[9]));
                             atoms.add(a);
+                            if (a.symbol.contains("*")){
+                                numGhosts++;
+                            }
+                        }
+                        if (numGhosts == n){
+                            System.out.println("Error: Molecule " + name + " cannot be comprised of only ghost atoms.");
+                            System.exit(0);
                         }
                         Molecule m = new Molecule(name, radius, atoms);
                         dbase.add(m);
@@ -394,6 +402,9 @@ public class Space {
             String content = "          " + numAtoms() + "\nEnergy: " + calcEnergy() + " Kcal/mole";
             for (Molecule m : space){
                 for (Atom a : m.atoms){
+                    if (a.symbol.contains("*")){
+                        continue;
+                    }
                     content += "\n " + a.symbol;
                     if (a.symbol.length() == 1) {
                     	content += " ";
@@ -443,7 +454,9 @@ public class Space {
         int ret = 0;
         for (int x = 0; x < space.size(); x++){
             for (int y = 0; y < space.get(x).atoms.size(); y++){
-                ret++;
+                if (!space.get(x).atoms.get(y).symbol.contains("*")){ //Exclude ghosts from count
+                    ret++;
+                }
             }
         }
         return ret;
@@ -564,6 +577,9 @@ public class Space {
             String content = "          " + numAtoms() + "\nEnergy: " + calcEnergy() + " Kcal/mole";
             for (Molecule m : space){
                 for (Atom a : m.atoms){
+                    if (a.symbol.contains("*")){
+                        continue;
+                    }
                     content += "\n " + a.symbol;
                     if (a.symbol.length() == 1) {
                     	content += " ";

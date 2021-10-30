@@ -141,6 +141,9 @@ public class Molecule {
         double massPosY = 0;
         double massPosZ = 0;
         for (Atom a : atoms){
+            if (a.symbol.contains("*")){
+                continue;
+            }
             totMass += a.mass;
             massPosX += a.x * a.mass;
             massPosY += a.y * a.mass;
