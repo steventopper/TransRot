@@ -82,9 +82,9 @@ All run parameters are set in config.txt. **VERY IMPORTANT:** Each parameter mus
         </br>Example: For an Input.xyz file containing 3 ammonium ions, followed by 4 chloride ions, followed by 1 ammonium ion, the comment line would be: <pre> 5 5 5 1 1 1 1 5 </pre> <b>Important:</b> While this option is enabled, Length of Cubic Space will not automatically increase and must be manually set to a proper value.</li>
     <li>0K Finale (true/false): Enables the final tooth to repeat itself at a static temperature of 0K. The output file for this tooth replaces the output file for the final tooth, and its movie file will be appended to the final output movie file.</li>
     <li>Static Temperature (true/false): This option is designed to help with determining other values such as Max Translation Distance. When enabled, Number of Teeth will automatically be set to 1. During this tooth, the temperature will remain at the starting temperature. The cluster's energy after each move will also be recorded to energies.txt.</li>
-    <li>Use Pairwise Interaction Parameters (true/false): This option allows users to use custom combination rules to determine interaction parameters between various atoms. When enabled, Ai, Bi, Ci, and Di will be read from pairwise.txt instead of dbase.txt. These values must be set individually for each unique combination of atoms in the cluster.
-</br>When adding pairwise interactions to pairwise.txt, all numbers or symbols on the same row must be separated by **at least 2 spaces**. The format for apending an interaction is shown below:
-</br>First Atomic Symbol &nbsp; Second Atomic Symbol &nbsp; Ai &nbsp; Bi &nbsp; Ci &nbsp; Di
+    <li>Override Interaction Parameters (true/false): This option allows users to define custom interactions between various atoms. When enabled, combinations of Ai, Bi, Ci, and Di will be read from param_overrides.txt instead of being generated from the values in dbase.txt. These values must be set individually for each unique combination of atoms in the cluster.
+</br>When defining interactions in pairwise.txt, all numbers or symbols on the same row must be separated by **at least 2 spaces**. The format for appending an interaction is shown below:
+</br> <pre>First Atomic Symbol &nbsp; Second Atomic Symbol &nbsp; Ai &nbsp; Bi &nbsp; Ci &nbsp; Di </pre>
 </br>For more information regarding these parameters, see "How to Add New Molecules to the Database".</li>
 </ul>
     
