@@ -348,7 +348,7 @@ public class Space {
         try {
             String pathName = Main.class.getProtectionDomain().getCodeSource().getLocation().getPath();
             pathName = URLDecoder.decode(pathName, "utf-8");
-            pathName = "/" + pathName.substring(1, pathName.lastIndexOf("/")) + "/pairwise.txt";
+            pathName = "/" + pathName.substring(1, pathName.lastIndexOf("/")) + "/param_overrides.txt";
             Scanner scanner = new Scanner(new File(pathName));
             int currLine = 0; //Tracks current line for error printing
             while (scanner.hasNextLine()){
@@ -365,13 +365,13 @@ public class Space {
                     pairwiseDbase.put(key2, value);
                 }
                 catch (Exception exc){
-                    System.out.println("Error on line " + currLine + " in pairwise.txt: File incorrectly formatted.");
+                    System.out.println("Error on line " + currLine + " in param_overrides.txt: File incorrectly formatted.");
                     System.exit(0);
                 }
             }
         }
         catch (Exception exc){
-            System.out.println("Error: File pairwise.txt not found.");
+            System.out.println("Error: File param_overrides.txt not found.");
             System.exit(0);
         }
     }
