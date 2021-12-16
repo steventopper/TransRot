@@ -695,7 +695,7 @@ public class Space {
                 double ratio = (double) accepted / (double) total;
                 String pathName = dir + "/acceptance.txt";
                 FileWriter writer = new FileWriter(new File(pathName), true);
-                writer.write(new BigDecimal(temperature).setScale(2, BigDecimal.ROUND_HALF_UP) + "°K: " + ratio + "\n");
+                writer.write(new BigDecimal(temperature).setScale(2, BigDecimal.ROUND_HALF_UP) + " " + new BigDecimal(ratio).setScale(5, BigDecimal.ROUND_HALF_UP) + "\n");
                 writer.close();
             }
             catch (Exception exc){
