@@ -17,7 +17,7 @@ Use Input.xyz (true/false):                          false
 0K Finale (true/false):                              false
 Static Temperature (true/false):                     false
 Override Interaction Parameters (true/false):        false
-Write Acceptance Ratios:                             true
+Write Acceptance Ratios(true/false):                 true
 
 //List of Molecules to be Used
 //Ex: H2O 2 <- 2 Molecules of H2O (separate molecular formula and number with space)

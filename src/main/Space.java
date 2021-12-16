@@ -693,13 +693,13 @@ public class Space {
         if(writeAcceptanceRatios){ //TODO: fix this
             try{
                 double ratio = (double) accepted / (double) total;
-                String pathName = dir + "/acceptance.txt";
+                String pathName = dir + "/acceptance_ratios.txt";
                 FileWriter writer = new FileWriter(new File(pathName), true);
                 writer.write(new BigDecimal(temperature).setScale(2, BigDecimal.ROUND_HALF_UP) + " " + new BigDecimal(ratio).setScale(5, BigDecimal.ROUND_HALF_UP) + "\n");
                 writer.close();
             }
             catch (Exception exc){
-                System.out.println("Error: Failed to write to " + dir + "/acceptance.txt");
+                System.out.println("Error: Failed to write to " + dir + "/acceptance_ratios.txt");
                 System.exit(0);
             }
         }
