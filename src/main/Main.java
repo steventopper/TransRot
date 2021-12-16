@@ -1,5 +1,6 @@
 package main;
 import org.apache.commons.math3.random.MersenneTwister;
+import org.apache.commons.math3.util.Pair;
 import org.apache.commons.math3.util.Precision;
 
 import java.math.BigDecimal;
@@ -55,29 +56,41 @@ public class Main {
     	boolean isDoubleCycle = false;
     	for (int x = 0; x < numTeeth; x++) {
     		double delT = t / (ptsPerTooth - 1);
+    		int accepted = 0;
+    		int total = 0;
     		for (int y = 0; y < ptsPerTooth; y++) {
     			for (int z = 0; z < numMovesPerPoint; z++) {
+    				total++;
     				double energyChange = 0;
     				Molecule m = s.randMolecule(); //Pick a random molecule
     				if (r.nextDouble() >= 0.5 && m.atoms.size() > 1) { //If the rotation of m matters (more than 1 atom), 50% for either rotate or translate; otherwise just translate
                         if (r.nextDouble() >= magwalkProbRot) { //Chance to magwalk from config
-							energyChange = s.rotate(m, maxRot, t);
+							Pair<Double, Integer> values = s.rotate(m, maxRot, t);
+							energyChange += values.getFirst();
+							accepted += values.getSecond();
                         }
                         else {
-							energyChange = s.rotate(m, 2 * Math.PI, t); //Magwalking sets rotation maximum to 2PI
+							Pair<Double, Integer> values = s.rotate(m, 2 * Math.PI, t); //Magwalking sets rotation maximum to 2PI
+							energyChange += values.getFirst();
+							accepted += values.getSecond();
                         }
                     }
                     else{
                         if (r.nextDouble() >= magwalkProbTrans) { //Chance to magwalk from config
-							energyChange = s.move(m, maxD, t);
+							Pair<Double, Integer> values = s.move(m, maxD, t);
+							energyChange += values.getFirst();
+							accepted += values.getSecond();
                         }
                         else{
-                            energyChange = s.move(m, maxD * magwalkFactorTrans, t); //Magwalking multiplies distance maximum by magwalk factor (specified in config file)
+							Pair<Double, Integer> values = s.move(m, maxD * magwalkFactorTrans, t); //Magwalking multiplies distance maximum by magwalk factor (specified in config file)
+							energyChange += values.getFirst();
+							accepted += values.getSecond();
                         }
                     }
 					startingEnergy += energyChange;
         			s.writeEnergy(startingEnergy);
     			}
+    			s.writeAcceptance(t, accepted, total);
     			if (!s.staticTemp){
 					t -= delT; //Decrease temperature by decrement factor
 				}

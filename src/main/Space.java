@@ -30,6 +30,7 @@ public class Space {
     boolean extraCycle;
     boolean staticTemp;
     boolean isPairwise;
+    boolean writeAcceptanceRatios;
 
     private String dir; //Directory of .xyz files to be saved in, created at runtime
 
@@ -225,6 +226,8 @@ public class Space {
                 staticTemp = Boolean.parseBoolean(scanner.nextLine().split(" " + " +")[1]);
                 currLine++;
                 isPairwise = Boolean.parseBoolean(scanner.nextLine().split(" " + " +")[1]);
+                currLine++;
+                writeAcceptanceRatios = Boolean.parseBoolean(scanner.nextLine().split(" " + " +")[1]);
                 currLine++;
                 //Skip 3 lines for comments
                 scanner.nextLine();
@@ -516,12 +519,12 @@ public class Space {
     	return totEnergy;
     }
     //Chooses whether to rotate molecule or not based on change in energy
-    public double rotate(Molecule m, double maxRot, double temp) {
+    public Pair<Double, Integer> rotate(Molecule m, double maxRot, double temp) {
         m.rotateTemp(maxRot); //Temporarily rotate molecule
         for (Atom a : m.atoms){
             if (a.tempx > size * 0.75 || a.tempx < size * -0.75 || a.tempy > size * 0.75 || a.tempy < size * -0.75 ||a.tempz > size * 0.75 || a.tempz < size * -0.75){
                 m.resetTemps();
-                return 0;
+                return new Pair<>(0.0, 0);
             }
         }
         double eStart = 0;
@@ -536,19 +539,19 @@ public class Space {
             double rand = r.nextDouble();
             if (temp == 0) { //If temperature is zero, formula fails but only decreases in energy should be accepted, so reject manually
                 m.resetTemps();
-                return 0;
+                return new Pair<>(0.0, 0);
             }
             double test = Math.pow(Math.E, -1 * (eEnd - eStart)/(BOLTZMANN_CONSTANT * temp));
             if (rand > test) {
                 m.resetTemps();
-                return 0;
+                return new Pair<>(0.0, 0);
             }
         }
         m.setTemps();
-        return eEnd - eStart;
+        return new Pair<>(eEnd - eStart, 1);
     }
     //Chooses whether to move molecule or not based on change in energy
-    public double move(Molecule m, double maxD, double temp) {
+    public Pair<Double, Integer> move(Molecule m, double maxD, double temp) {
     	//Temporarily move molecule
         double x = (r.nextDouble() * 2 * maxD) - maxD;
     	double y = (r.nextDouble() * 2 * maxD) - maxD;
@@ -564,7 +567,7 @@ public class Space {
     	for (Atom a : m.atoms){
     	    if (a.tempx > size * 0.75 || a.tempx < size * -0.75 || a.tempy > size * 0.75 || a.tempy < size * -0.75 ||a.tempz > size * 0.75 || a.tempz < size * -0.75){
                 m.resetTemps();
-                return 0;
+                return new Pair<>(0.0, 0);
             }
         }
     	/**if (m.tempx > size * 1.5 || m.tempy > size * 1.5 || m.tempz > size * 1.5 || m.tempx < 0 || m.tempy < 0 || m.tempz < 0){ //If molecule would be moved out of valid space, reject the move
@@ -584,16 +587,16 @@ public class Space {
 			double rand = r.nextDouble();
 			if (temp == 0) { //If temperature is zero, formula fails but only decreases in energy should be accepted, so reject manually
 				m.resetTemps();
-				return 0;
+                return new Pair<>(0.0, 0);
 			}
 			double test = Math.pow(Math.E, -1 * (eEnd - eStart)/(BOLTZMANN_CONSTANT * temp));
 			if (rand > test) {
 				m.resetTemps();
-				return 0;
+                return new Pair<>(0.0, 0);
 			}
 		}
 		m.setTemps();
-		return eEnd - eStart;
+		return new Pair<>(eEnd - eStart, 1);
     }
     public Molecule randMolecule() {
     	int x = r.nextInt(space.size());
@@ -682,6 +685,21 @@ public class Space {
             }
             catch (Exception exc){
                 System.out.println("Error: Failed to writer to " + dir + "/energies.txt.");
+                System.exit(0);
+            }
+        }
+    }
+    public void writeAcceptance(double temperature, int accepted, int total){
+        if(writeAcceptanceRatios){ //TODO: fix this
+            try{
+                double ratio = (double) accepted / (double) total;
+                String pathName = dir + "/acceptance.txt";
+                FileWriter writer = new FileWriter(new File(pathName), true);
+                writer.write(new BigDecimal(temperature).setScale(2, BigDecimal.ROUND_HALF_UP) + "°K: " + ratio + "\n");
+                writer.close();
+            }
+            catch (Exception exc){
+                System.out.println("Error: Failed to write to " + dir + "/acceptance.txt");
                 System.exit(0);
             }
         }
