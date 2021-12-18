@@ -21,14 +21,7 @@ In the current version, TransRot does not itself fully optimize the set of final
 
 ### Important note: 
 
-The sawtooth simulated annealing and magwalk methods are more thoroughly described in the following publications, which should be consulted for more details. All users are requested to cite these as well as the program itself in any published work using this software, Reference (1) was the first use of a sawtooth simulated annealing scheme; (2) describes the use of magwalking; (3) and (4) demonstrated the use of this combination of methods. 
-
-<ol>
-<li>F.M. Torres, E. Agichtein, L. Grinberg, G. Yu, R.Q. Topper, A note on the application of the “Boltzmann simplex”-simulated annealing algorithm to global optimizations of argon and water clusters, Journal of Molecular Structure (THEOCHEM) 419, 85 (1997). DOI: https://doi.org/S0166-1280(97)00195-4 </li>
-<li>R.Q. Topper, D.L. Freeman, D. Bergin, K. LaMarche, Computational techniques and strategies for Monte Carlo thermodynamic calculations with applications to nanoclusters,  invited book chapter, Reviews in Computational Chemistry, Vol. 19, pp. 1-41, K.B. Lipkowitz, R. Larter and T.R. Cundari, Eds., Wiley-VCH/John Wiley and Sons, New York (2003). ISBN 0-471-23585-7.</li>
-<li>R.Q. Topper, W. V. Feldmann, I. Markus,, D. Bergin, P.R. Sweeney, Simulated annealing and density functional theory calculations of structural and energetic properties of the ammonium chloride clusters (NH4Cl)n, (NH4+)(NH4Cl)n and (Cl–)(NH4Cl)n, n = 1–13, Journal of Physical Chemistry A, 115 (38), pp. 10423-10432 (2011).</li>
-<li>J.J. Biswakarma, V. Ciocoi, R.Q. Topper, Energetics, thermodynamics, and hydrogen bond diversity in ammonium halide clusters, 120(40), pp. 7924-7934 (2016).</li>
-</ol>
+For information on the allowed usage and distribution of TransRot and its derivative works, please read the section titled Licensing Information, which can be found at the bottom of this document.
 
 ## Prerequisites: 
 
@@ -129,9 +122,9 @@ Atomic Symbol &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; x &nbsp; &nbsp; &nbsp; y &nbsp; 
 ... \
 Continued for each atom in the particle
 
-For comparison, the parameters provided in the sample dbase file are appropriate for simulations of H2O clusters using the TIP3P interaction potential due to Jorgensen et al. (5) and are at the present time documented correctly on Wikipedia (6). In our testing, TransRot was used to successfully find the global minimum-energy structures of TIP3P water clusters (H2O)n with (n=2-8). (7)
+For comparison, the parameters provided in the sample dbase file are appropriate for simulations of H2O clusters using the TIP3P interaction potential due to Jorgensen et al. (1) and are at the present time documented correctly on Wikipedia (2). In our testing, TransRot was used to successfully find the global minimum-energy structures of TIP3P water clusters (H2O)n with (n=2-8). (3)
  
- <ol start=5>
+ <ol>
     <li>Jorgensen WL, Chandrasekhar J, Madura JD, Impey RW, Klein ML (1983). "Comparison of simple potential functions for simulating liquid water". Journal of Chemical Physics. 79 (2): 926–935.</li>
     <li>Wikipedia contributors, "Water model," Wikipedia, The Free Encyclopedia, https://en.wikipedia.org/w/index.php?title=Water_model&oldid=1035969800 (accessed September 7, 2021).</li>
     <li>Wales DJ, Hodges MP (1998). “Global minima of water clusters (H2O)n, n le 21, described by an empirical potential”. Chemical Physics Letters 286: 65-72.</li>
@@ -142,6 +135,22 @@ Massless interaction points can be defined in the database by including an aster
 Massless interaction points do not contribute towards the center of mass of the particle and will not be written into output files or output movie files. \
 A particle cannot be made entirely out of massless interaction points; it must contain at least one atom.
 
+## Licensing Information
+TransRot is by default licensed under All Rights Reserved. However, we allow usage of, as well as the creation of derivative works of, TransRot under the following terms (hereforth referred to as the "TransRot License"):
+<ol>
+    <li>Derivative works of this program for the purpose of improving upon, adding, or changing features are allowed.</li>
+    <li>Derivative works of this program cannot be commercially distributed.</li>
+    <li>All derivative works of this program must also be licensed under the TransRot License.</li>
+    <li>Usage of this program for general use is allowed; however, both this program and the following papers must be cited in any use:
+    <ol>
+        <li>F.M. Torres, E. Agichtein, L. Grinberg, G. Yu, R.Q. Topper, A note on the application of the “Boltzmann simplex”-simulated annealing algorithm to global optimizations of argon and water clusters, Journal of Molecular Structure (THEOCHEM) 419, 85 (1997). DOI: https://doi.org/S0166-1280(97)00195-4 </li>
+        <li>R.Q. Topper, D.L. Freeman, D. Bergin, K. LaMarche, Computational techniques and strategies for Monte Carlo thermodynamic calculations with applications to nanoclusters,  invited book chapter, Reviews in Computational Chemistry, Vol. 19, pp. 1-41, K.B. Lipkowitz, R. Larter and T.R. Cundari, Eds., Wiley-VCH/John Wiley and Sons, New York (2003). ISBN 0-471-23585-7.</li>
+        <li>R.Q. Topper, W. V. Feldmann, I. Markus,, D. Bergin, P.R. Sweeney, Simulated annealing and density functional theory calculations of structural and energetic properties of the ammonium chloride clusters (NH4Cl)n, (NH4+)(NH4Cl)n and (Cl–)(NH4Cl)n, n = 1–13, Journal of Physical Chemistry A, 115 (38), pp. 10423-10432 (2011).</li>
+        <li>J.J. Biswakarma, V. Ciocoi, R.Q. Topper, Energetics, thermodynamics, and hydrogen bond diversity in ammonium halide clusters, 120(40), pp. 7924-7934 (2016).</li>
+    </ol>
+     Reference (i) was the first use of a sawtooth simulated annealing scheme; (ii) describes the use of magwalking; (iii) and (iv) demonstrated the use of this combination of methods. </li>
+</ol>
+
 ## How to report bugs, issues, or feature requests
 
-To report a bug or issue, or to submit a feature request, please create a new issue in the tab labled “Issues”, or click [here](https://github.com/steventopper/Transrot/issues/new).
+To report a bug or issue, or to submit a feature request, please create a new issue in the "Issues" tab found at https://github.com/steventopper/TransRot/issues; alternatively, click [here](https://github.com/steventopper/TransRot/issues/new/choose) to create a new issue from a template.
