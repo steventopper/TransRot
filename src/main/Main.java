@@ -8,6 +8,7 @@ import java.math.BigDecimal;
 public class Main {
     private static MersenneTwister r = new MersenneTwister();
     public static void main(String[] args) {
+    	System.out.println(timestamp(574316270386200L, 599427407827500L));
         Space s = new Space(10);
         long time1 = System.nanoTime();
     	s.readDB();
@@ -118,9 +119,12 @@ public class Main {
     	String ret = "";
 		float runtime = (time2 - time1) / 1000000000f;
 		double seconds = Precision.round(runtime % 60.0, 3, BigDecimal.ROUND_HALF_UP);
-		int minutes = (int) runtime / 60;
-		int hours = (int) minutes / 60;
-		if (hours > 0) ret += hours + "h ";
+		int minutes = (int) (runtime / 60);
+		int hours = minutes / 60;
+		if (hours > 0){
+			ret += hours + "h ";
+			minutes %= 60;
+		}
 		if (minutes > 0) ret += minutes + "m ";
 		return ret + seconds + "s";
 	}
