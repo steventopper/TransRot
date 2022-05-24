@@ -31,6 +31,7 @@ public class Space {
     boolean staticTemp;
     boolean isPairwise;
     boolean writeAcceptanceRatios;
+    boolean writeEnergiesEnabled;
 
     private String dir; //Directory of .xyz files to be saved in, created at runtime
 
@@ -224,6 +225,8 @@ public class Space {
                 extraCycle = Boolean.parseBoolean(scanner.nextLine().split(" " + " +")[1]);
                 currLine++;
                 staticTemp = Boolean.parseBoolean(scanner.nextLine().split(" " + " +")[1]);
+                currLine++;
+                writeEnergiesEnabled = Boolean.parseBoolean(scanner.nextLine().split(" " + " +")[1]);
                 currLine++;
                 isPairwise = Boolean.parseBoolean(scanner.nextLine().split(" " + " +")[1]);
                 currLine++;

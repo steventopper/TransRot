@@ -8,7 +8,6 @@ import java.math.BigDecimal;
 public class Main {
     private static MersenneTwister r = new MersenneTwister();
     public static void main(String[] args) {
-    	System.out.println(timestamp(574316270386200L, 599427407827500L));
         Space s = new Space(10);
         long time1 = System.nanoTime();
     	s.readDB();
@@ -42,7 +41,9 @@ public class Main {
         time1 = System.nanoTime();
         if (s.staticTemp){
         	s.numTeeth = 1;
-        	s.writeEnergy(startingEnergy);
+        	if (s.writeEnergiesEnabled) {
+				s.writeEnergy(startingEnergy);
+			}
 		}
         sawtoothAnneal(s, s.maxTemperature, s.movePerPoint, s.pointsPerTooth, s.pointIncrement, s.numTeeth, s.tempDecreasePerTooth, s.maxTransDist, s.magwalkFactorTrans, s.magwalkProbTrans, s.maxRotDegree, s.magwalkProbRot, startingEnergy);
         time2 = System.nanoTime();
@@ -62,34 +63,30 @@ public class Main {
     		for (int y = 0; y < ptsPerTooth; y++) {
     			for (int z = 0; z < numMovesPerPoint; z++) {
     				total++;
-    				double energyChange = 0;
     				Molecule m = s.randMolecule(); //Pick a random molecule
+					Pair<Double, Integer> values = null;
     				if (r.nextDouble() >= 0.5 && m.atoms.size() > 1) { //If the rotation of m matters (more than 1 atom), 50% for either rotate or translate; otherwise just translate
                         if (r.nextDouble() >= magwalkProbRot) { //Chance to magwalk from config
-							Pair<Double, Integer> values = s.rotate(m, maxRot, t);
-							energyChange += values.getFirst();
-							accepted += values.getSecond();
+							values = s.rotate(m, maxRot, t);
                         }
                         else {
-							Pair<Double, Integer> values = s.rotate(m, 2 * Math.PI, t); //Magwalking sets rotation maximum to 2PI
-							energyChange += values.getFirst();
-							accepted += values.getSecond();
+							values = s.rotate(m, 2 * Math.PI, t); //Magwalking sets rotation maximum to 2PI
                         }
                     }
                     else{
                         if (r.nextDouble() >= magwalkProbTrans) { //Chance to magwalk from config
-							Pair<Double, Integer> values = s.move(m, maxD, t);
-							energyChange += values.getFirst();
-							accepted += values.getSecond();
+							values = s.move(m, maxD, t);
                         }
                         else{
-							Pair<Double, Integer> values = s.move(m, maxD * magwalkFactorTrans, t); //Magwalking multiplies distance maximum by magwalk factor (specified in config file)
-							energyChange += values.getFirst();
-							accepted += values.getSecond();
+							values = s.move(m, maxD * magwalkFactorTrans, t); //Magwalking multiplies distance maximum by magwalk factor (specified in config file)
                         }
                     }
-					startingEnergy += energyChange;
-        			s.writeEnergy(startingEnergy);
+
+                    if (s.writeEnergiesEnabled) {
+                    	startingEnergy += values.getFirst();
+						s.writeEnergy(startingEnergy);
+					}
+                    accepted += values.getSecond();
     			}
     			s.writeAcceptance(t, accepted, total);
     			if (!s.staticTemp){

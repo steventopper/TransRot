@@ -4,7 +4,7 @@ import org.apache.commons.math3.util.Pair;
 import java.util.HashMap;
 
 public class Atom {
-	private static final double K_VALUE = 332.0587;
+	private static final double K_VALUE = 332.0637133;
     String symbol;
     double x;
     double y;
@@ -23,6 +23,8 @@ public class Atom {
     double c;
     double d;
     double q;
+    //Composite of K_VALUE and q, to remove one floating point operation per energy calculation
+    double kTimesQ;
 
     double mass;
     public Atom(String s, double x, double y, double z, double A, double B, double C, double D, double Q, double mass){
@@ -40,6 +42,7 @@ public class Atom {
         d = D;
         q = Q;
         this.mass = mass;
+        this.kTimesQ = K_VALUE * q;
     }
     //For copying molecules from database List object, called by Molecule.Molecule(Molecule m)
     public Atom (Atom atom){
@@ -57,6 +60,7 @@ public class Atom {
         d = atom.d;
         q = atom.q;
         mass = atom.mass;
+        kTimesQ = K_VALUE * q;
     }
     //Calculates energy based on atom full position
     public double calcEnergy(Atom atom, boolean isPairwise, HashMap<Pair<String, String>, double[]> pairwiseDbase) { //Calculates energy compared to rest of system, instead of total energy of system
@@ -83,7 +87,7 @@ public class Atom {
             D = Math.sqrt(this.d * atom.d);
         }
     	double r = Math.sqrt(Math.pow(atom.x - x, 2) + Math.pow(atom.y - y, 2) + Math.pow(atom.z - z, 2)); //Distance between atoms
-    	return (K_VALUE * this.q * atom.q / r) + A * Math.exp(-1 * B * r) - (C / Math.pow(r,  6)) + (D / Math.pow(r,  12));
+    	return (kTimesQ * atom.q / r) + A * Math.exp(-1 * B * r) - (C / Math.pow(r,  6)) + (D / Math.pow(r,  12));
     }
    // Calculates energy based on atom temp position
     public double calcTempEnergy(Atom atom, boolean isPairwise, HashMap<Pair<String, String>, double[]> pairwiseDbase) { //Calculates energy compared to rest of system, instead of total energy of system
@@ -111,7 +115,7 @@ public class Atom {
             D = Math.sqrt(this.d * atom.d);
         }
     	double r = Math.sqrt(Math.pow(atom.x - tempx, 2) + Math.pow(atom.y - tempy, 2) + Math.pow(atom.z - tempz, 2)); //Distance between atoms
-    	return (K_VALUE * this.q * atom.q / r) + A * Math.exp(-1 * B * r) - (C / Math.pow(r,  6)) + (D / Math.pow(r,  12));
+    	return (kTimesQ * atom.q / r) + A * Math.exp(-1 * B * r) - (C / Math.pow(r,  6)) + (D / Math.pow(r,  12));
     }
     //Sets temps to atom's current position, called by Molecule.resetTemps()
     public void resetTemps() {
