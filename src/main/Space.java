@@ -37,14 +37,16 @@ public class Space {
 
     private ArrayList<Molecule> list;
     private ArrayList<Molecule> space;
+    private ArrayList<Molecule> moveableMolecules;
     private ArrayList<Molecule> dbase;
     private HashMap<Pair<String, String>, double[]> pairwiseDbase;
-    private MersenneTwister r = new MersenneTwister(); //Used instead of Java.Random for greater accuracy in randomization
+    private static MersenneTwister r = new MersenneTwister(); //Used instead of Java.Random for greater accuracy in randomization
     private static final double BOLTZMANN_CONSTANT = 0.0019872;
     public Space(double s){
         size = s;
         list = new ArrayList<>();
         space = new ArrayList<>();
+        moveableMolecules = new ArrayList<>();
         dbase = new ArrayList<>();
         pairwiseDbase = new HashMap<>();
     }
@@ -275,7 +277,14 @@ public class Space {
                 String[] atomNums = scanner.nextLine().split(" ");
                 currLine++;
                 for (int x = 0; x < atomNums.length; x++){
-                    int atomNum = Integer.parseInt(atomNums[x]);
+                    int atomNum = -1;
+                    boolean unmoving = false;
+                    try {
+                        atomNum = Integer.parseInt(atomNums[x]);
+                    } catch (NumberFormatException exc){
+                        atomNum = Integer.parseInt(atomNums[x].substring(0, atomNums[x].length() - 1));
+                        unmoving = true;
+                    }
                     //Four arrays used for temporary storage, never get too large since they're overwritten for each molecule
                     String[] atomSyms = new String[atomNum];
                     double[] atomXs = new double[atomNum];
@@ -328,6 +337,9 @@ public class Space {
                             m.atoms = newAtoms;
                             m.setCenterOfMass();
                             space.add(m);
+                            if (!unmoving){
+                                moveableMolecules.add(m);
+                            }
                             break;
                         }
                     }
@@ -602,8 +614,8 @@ public class Space {
 		return new Pair<>(eEnd - eStart, 1);
     }
     public Molecule randMolecule() {
-    	int x = r.nextInt(space.size());
-    	return space.get(x);
+    	int x = r.nextInt(moveableMolecules.size());
+    	return moveableMolecules.get(x);
     }
     //Writes by appending to file in order to create a movie .xyz file that can be viewed in Avogadro
     public String writeMovie(String fileName){

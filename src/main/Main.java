@@ -64,7 +64,7 @@ public class Main {
     			for (int z = 0; z < numMovesPerPoint; z++) {
     				total++;
     				Molecule m = s.randMolecule(); //Pick a random molecule
-					Pair<Double, Integer> values = null;
+					Pair<Double, Integer> values;
     				if (r.nextDouble() >= 0.5 && m.atoms.size() > 1) { //If the rotation of m matters (more than 1 atom), 50% for either rotate or translate; otherwise just translate
                         if (r.nextDouble() >= magwalkProbRot) { //Chance to magwalk from config
 							values = s.rotate(m, maxRot, t);
