@@ -1,4 +1,4 @@
-# TransRot Version 1.5.3
+# TransRot Version 1.5.4
 
 Steven L. Topper and Robert Q. Topper\
 School of Engineering\
@@ -71,8 +71,8 @@ All run parameters are set in config.txt. **VERY IMPORTANT:** Each parameter mus
     <li>Magwalk Rotation Probability: Probability that magwalking will occur for each attempted rotational move, setting Max Rotation to 2π for that operation.</li>
     <li>Length of Cubic Space: Size of the original cube inside of which particles will be randomly placed to obtain the initial cluster structure. During annealing, particles will be confined to a box with side lengths of 1.5x this value.</li>
     <li>Max Failures During Propagation: While randomly placing particles inside the initial space, if a particle cannot be placed within the space within this number of attempts, the side length of the cubic space will be increased by 10% and the process will repeat until all particles are placed.</li>
-    <li>Use Input.xyz (true/false): Disables generation of a random cluster, instead using Input.xyz as the starting cluster. Input.xyz uses the standard .xyz file format, with the comment line denotating the number of atoms per molecule, as read from top to bottom, separated by spaces.
-        </br>Example: For an Input.xyz file containing 3 ammonium ions, followed by 4 chloride ions, followed by 1 ammonium ion, the comment line would be: <pre> 5 5 5 1 1 1 1 5 </pre> <b>Important:</b> While this option is enabled, Length of Cubic Space will not automatically increase and must be manually set to a proper value.</li>
+    <li>Use Input.xyz (true/false): Disables generation of a random cluster, instead using Input.xyz as the starting cluster. Input.xyz uses the standard .xyz file format, with the comment line denotating the number of atoms per molecule, as read from top to bottom, separated by spaces. Molecules can be marked as "frozen" (i.e. will not move or rotate during annealing) by following the number of atoms with the letter F.
+        </br>Example: For an Input.xyz file containing 3 ammonium ions, followed by 4 chloride ions, followed by 1 "frozen" ammonium ion, the comment line would be: <pre> 5 5 5 1 1 1 1 5F </pre> <b>Important:</b> While this option is enabled, Length of Cubic Space will not automatically increase and must be manually set to a proper value.</li>
     <li>0K Finale (true/false): Enables the final tooth to repeat itself at a static temperature of 0K. The output file for this tooth replaces the output file for the final tooth, and its movie file will be appended to the final output movie file.</li>
     <li>Static Temperature (true/false): This option is designed to help with determining other values such as Max Translation Distance. When enabled, Number of Teeth will automatically be set to 1. During this tooth, the temperature will remain at the starting temperature.</li>
     <li>Write Energies When Static Temperature (true/false): When Static Temperature is enabled, enabling this option saves the energy of the system to energies.txt after each attempted move. Enabling this option may cause TransRot to run significantly slower.</li>
