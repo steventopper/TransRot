@@ -1,4 +1,4 @@
-# TransRot Version 1.5.4
+# TransRot Version 1.6.0
 
 Steven L. Topper and Robert Q. Topper\
 School of Engineering\
