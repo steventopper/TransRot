@@ -83,6 +83,7 @@ public class Space {
                 if (space.size() == 0){ //If placing first molecule, no reason to do comparisons, just place the molecule
                     m.put(x, y, z);
                     space.add(m);
+                    moveableMolecules.add(m);
                     break;
                 }
                 boolean ok = true;
@@ -99,10 +100,12 @@ public class Space {
                 if (ok) {
                     m.put(x, y, z);
                     space.add(m);
+                    moveableMolecules.add(m);
                     break;
                 }
                 if (c >= maxPropFailures){ //Need larger space to place molecules
                 	space.clear();
+                	moveableMolecules.clear();
                     return false;
                 }
             }
@@ -614,8 +617,8 @@ public class Space {
 		return new Pair<>(eEnd - eStart, 1);
     }
     public Molecule randMolecule() {
-    	int x = r.nextInt(moveableMolecules.size());
-    	return moveableMolecules.get(x);
+        int x = r.nextInt(moveableMolecules.size());
+        return moveableMolecules.get(x);
     }
     //Writes by appending to file in order to create a movie .xyz file that can be viewed in Avogadro
     public String writeMovie(String fileName){
