@@ -2,6 +2,8 @@ package main;
 import java.io.*;
 import java.math.BigDecimal;
 import java.net.URLDecoder;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Scanner;
@@ -34,6 +36,10 @@ public class Space {
     boolean writeEnergiesEnabled;
 
     private String dir; //Directory of .xyz files to be saved in, created at runtime
+
+    //For saving lowest energy structure separately
+    private double minEnergy = Double.MAX_VALUE;
+    private int minEnergyToothNum;
 
     private ArrayList<Molecule> list;
     private ArrayList<Molecule> space;
@@ -444,12 +450,13 @@ public class Space {
         }
     }
     //Writes atom placements to .xyz file. Programs that read .xyz files will figure out what atoms go to what molecules, so that information is unnecessary
-    public String write(String fileName){
+    public String write(int outputFileNumber){
         try{
-        	String pathName = dir + "/" + fileName; //dir specified in makeDirectory()
+        	String pathName = dir + "/Output" + outputFileNumber + ".xyz"; //dir specified in makeDirectory()
             FileWriter writer = new FileWriter(new File(pathName));
+            double toothEnergy = calcEnergy();
             //Write to file in correct .xyz output format
-            String content = "          " + numAtoms() + "\nEnergy: " + calcEnergy() + " Kcal/mole";
+            String content = "          " + numAtoms() + "\nEnergy: " + toothEnergy + " Kcal/mole";
             for (Molecule m : space){
                 for (Atom a : m.atoms){
                     if (a.symbol.contains("*")){
@@ -492,11 +499,15 @@ public class Space {
                 }
             }
             writer.write(content + "\n");
+            if (toothEnergy < minEnergy){
+                minEnergy = toothEnergy;
+                minEnergyToothNum = outputFileNumber;
+            }
             writer.close();
             return pathName;
         }
         catch(Exception exc){
-            System.out.println("Error: Failed to write to " + dir + "/" + fileName + ".");
+            System.out.println("Error: Failed to write to " + dir + "/Output" + outputFileNumber + ".xyz");
             System.exit(0);
             return "Error";
         }
@@ -621,9 +632,9 @@ public class Space {
         return moveableMolecules.get(x);
     }
     //Writes by appending to file in order to create a movie .xyz file that can be viewed in Avogadro
-    public String writeMovie(String fileName){
+    public String writeMovie(int outputStartNumber, int outputEndNumber){
         try{
-            String pathName = dir + "/" + fileName; //dir specified in makeDirectory()
+            String pathName = dir + "/Output" + outputStartNumber + "_" + outputEndNumber + "_Movie.xyz"; //dir specified in makeDirectory()
             FileWriter writer = new FileWriter(new File(pathName), true);
             //Write to file in correct .xyz output format
             String content = "          " + numAtoms() + "\nEnergy: " + calcEnergy() + " Kcal/mole";
@@ -673,7 +684,7 @@ public class Space {
             return pathName;
         }
         catch(Exception exc){
-            System.out.println("Error: Failed to write to " + dir + "/" + fileName + ".");
+            System.out.println("Error: Failed to write to " + dir + "/Output" + outputStartNumber + "_" + outputEndNumber + "_Movie.xyz");
             System.exit(0);
             return "Error";
         }
@@ -720,6 +731,17 @@ public class Space {
                 System.out.println("Error: Failed to write to " + dir + "/acceptance_ratios.txt");
                 System.exit(0);
             }
+        }
+    }
+    //Writes min energy structure to min_structure.xyz
+    public void writeMinEnergy(){
+        String writePath = dir + "/Min_Energy_Structure_" + minEnergyToothNum + ".xyz";
+        try {
+            Files.copy(new File(dir + "/Output" + minEnergyToothNum + ".xyz").toPath(), new File(writePath).toPath());
+        }
+        catch (Exception exc){
+            System.out.println("Error: Failed to write to " + dir + "/min_energy_structure" + minEnergyToothNum + ".xyz");
+            System.exit(0);
         }
     }
 }

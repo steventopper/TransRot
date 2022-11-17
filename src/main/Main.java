@@ -29,7 +29,7 @@ public class Main {
         s.makeDirectory();
         long time2 = System.nanoTime();
         String stamp = timestamp(time1, time2);
-        String str = s.write("Output0.xyz");
+        String str = s.write(0);
         String initText = "Initialization ";
         if (!s.useInput){
         	initText += "and propagation ";
@@ -96,7 +96,7 @@ public class Main {
     				t = 0; //Prevents temperature from becoming negative, which causes issues
     			}
 
-    			s.writeMovie("Output" + x + "_" + (x + 1) + "_Movie.xyz");
+    			s.writeMovie(x, x+1);
     		}
     		saveT *= toothScale;
     		t = saveT;
@@ -107,10 +107,14 @@ public class Main {
 				x--;
 			}
 			else{
-				s.write("Output" + (x + 1) + ".xyz");
+				s.write(x + 1);
 				s.log("Energy at end of tooth " + (x + 1) + ": " + s.calcEnergy());
 			}
     	}
+    	//After all teeth, if numTeeth > 1, write minimum energy
+		if (numTeeth > 1){
+			s.writeMinEnergy();
+		}
     }
     public static String timestamp(long time1, long time2){
     	String ret = "";
