@@ -144,7 +144,7 @@ TransRot is by default licensed under All Rights Reserved. However, we allow usa
     <li>Derivative works of this program cannot be commercially distributed.</li>
     <li>All derivative works of this program must also be licensed under the TransRot License.</li>
     <li>Usage of this program for general use is allowed; however, both this program and the following paper must be cited in any use:
-    <br>R.Q. Topper, S.L. Topper. S. Lee, TransRot: A portable software package for simulated annealing Monte Carlo geometry optimization of atomic and molecular clusters, in ACS Symposium Series Vol. 1428, C.A. Parish and T.A. Hopkins, Eds., American Chemical Society, Chapter 2, pp. 19-38. https://pubs.acs.org/doi/abs/10.1021/bk-2022-1428.ch002</li>
+    <br>R.Q. Topper, S.L. Topper. S. Lee, TransRot: A portable software package for simulated annealing Monte Carlo geometry optimization of atomic and molecular clusters, in ACS Symposium Series Vol. 1428, C.A. Parish and T.A. Hopkins, Eds., American Chemical Society, Chapter 2, pp. 19-38 (2022). https://pubs.acs.org/doi/abs/10.1021/bk-2022-1428.ch002</li>
     <li> The following papers may optionally be cited as applicable:</li>
     <ol>
         <li>F.M. Torres, E. Agichtein, L. Grinberg, G. Yu, R.Q. Topper, A note on the application of the “Boltzmann simplex”-simulated annealing algorithm to global optimizations of argon and water clusters, Journal of Molecular Structure (THEOCHEM) 419, 85 (1997). DOI: https://doi.org/S0166-1280(97)00195-4 </li>
