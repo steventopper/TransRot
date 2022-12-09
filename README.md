@@ -143,12 +143,14 @@ TransRot is by default licensed under All Rights Reserved. However, we allow usa
     <li>Derivative works of this program for the purpose of improving upon, adding, or changing features are allowed.</li>
     <li>Derivative works of this program cannot be commercially distributed.</li>
     <li>All derivative works of this program must also be licensed under the TransRot License.</li>
-    <li>Usage of this program for general use is allowed; however, both this program and the following papers must be cited in any use:
+    <li>Usage of this program for general use is allowed; however, both this program and the following paper must be cited in any use:
+    <br>R.Q. Topper, S.L. Topper. S. Lee, TransRot: A portable software package for simulated annealing Monte Carlo geometry optimization of atomic and molecular clusters, in ACS Symposium Series Vol. 1428, C.A. Parish and T.A. Hopkins, Eds., American Chemical Society, Chapter 2, pp. 19-38. https://pubs.acs.org/doi/abs/10.1021/bk-2022-1428.ch002</li>
+    <li> The following papers may optionally be cited as applicable:</li>
     <ol>
         <li>F.M. Torres, E. Agichtein, L. Grinberg, G. Yu, R.Q. Topper, A note on the application of the “Boltzmann simplex”-simulated annealing algorithm to global optimizations of argon and water clusters, Journal of Molecular Structure (THEOCHEM) 419, 85 (1997). DOI: https://doi.org/S0166-1280(97)00195-4 </li>
-        <li>R.Q. Topper, D.L. Freeman, D. Bergin, K. LaMarche, Computational techniques and strategies for Monte Carlo thermodynamic calculations with applications to nanoclusters,  invited book chapter, Reviews in Computational Chemistry, Vol. 19, pp. 1-41, K.B. Lipkowitz, R. Larter and T.R. Cundari, Eds., Wiley-VCH/John Wiley and Sons, New York (2003). ISBN 0-471-23585-7.</li>
-        <li>R.Q. Topper, W. V. Feldmann, I. Markus, D. Bergin, P.R. Sweeney, Simulated annealing and density functional theory calculations of structural and energetic properties of the ammonium chloride clusters (NH4Cl)n, (NH4+)(NH4Cl)n and (Cl–)(NH4Cl)n, n = 1–13, Journal of Physical Chemistry A, 115 (38), pp. 10423-10432 (2011).</li>
-        <li>J.J. Biswakarma, V. Ciocoi, R.Q. Topper, Energetics, thermodynamics, and hydrogen bond diversity in ammonium halide clusters, 120(40), pp. 7924-7934 (2016).</li>
+        <li>R.Q. Topper, D.L. Freeman, D. Bergin, K. LaMarche, Computational techniques and strategies for Monte Carlo thermodynamic calculations with applications to nanoclusters,  in Reviews in Computational Chemistry, Vol. 19, Ch.1, pp. 1-41, K.B. Lipkowitz, R. Larter and T.R. Cundari, Eds., Wiley-VCH/John Wiley and Sons, New York (2003). [ISBN 0-471-23585-7.](https://onlinelibrary.wiley.com/doi/abs/10.1002/0471466638.ch1)</li>
+        <li>R.Q. Topper, W. V. Feldmann, I. Markus, D. Bergin, P.R. Sweeney, Simulated annealing and density functional theory calculations of structural and energetic properties of the ammonium chloride clusters (NH4Cl)n, (NH4+)(NH4Cl)n and (Cl–)(NH4Cl)n, n = 1–13, Journal of Physical Chemistry A, 115 (38), pp. 10423-10432 (2011). https://pubs.acs.org/doi/full/10.1021/jp2069732</li>
+        <li>J.J. Biswakarma, V. Ciocoi, R.Q. Topper, Energetics, thermodynamics, and hydrogen bond diversity in ammonium halide clusters, 120(40), pp. 7924-7934 (2016). https://pubs.acs.org/doi/full/10.1021/acs.jpca.6b06788 </li>
     </ol>
      Reference (i) was the first use of a sawtooth simulated annealing scheme; (ii) describes the use of magwalking; (iii) and (iv) demonstrated the use of this combination of methods. </li>
 </ol>
