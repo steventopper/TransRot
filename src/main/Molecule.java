@@ -15,7 +15,7 @@ public class Molecule {
     double tempy;
     double tempz;
     double radius;
-    private static MersenneTwister r = new MersenneTwister();
+    private static final MersenneTwister r = new MersenneTwister();
     ArrayList<Atom> atoms;
     HashMap<String, Integer> atomSymbols = new HashMap<>(); //Used for pattern matching
     public Molecule(String n, double rad, ArrayList<Atom> a){

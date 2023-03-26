@@ -1,9 +1,9 @@
 package main;
 import java.io.*;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.net.URLDecoder;
 import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Scanner;
@@ -41,12 +41,12 @@ public class Space {
     private double minEnergy = Double.MAX_VALUE;
     private int minEnergyToothNum;
 
-    private ArrayList<Molecule> list;
-    private ArrayList<Molecule> space;
-    private ArrayList<Molecule> moveableMolecules;
-    private ArrayList<Molecule> dbase;
-    private HashMap<Pair<String, String>, double[]> pairwiseDbase;
-    private static MersenneTwister r = new MersenneTwister(); //Used instead of Java.Random for greater accuracy in randomization
+    private final ArrayList<Molecule> list;
+    private final ArrayList<Molecule> space;
+    private final ArrayList<Molecule> moveableMolecules;
+    private final ArrayList<Molecule> dbase;
+    private final HashMap<Pair<String, String>, double[]> pairwiseDbase;
+    private static final MersenneTwister r = new MersenneTwister(); //Used instead of Java.Random for greater accuracy in randomization
     private static final double BOLTZMANN_CONSTANT = 0.0019872;
     public Space(double s){
         size = s;
@@ -151,11 +151,10 @@ public class Space {
                         }
                         String[] s = scanner.nextLine().split(" " + " +");
                         currLine++;
-                        double radius = 0;
                         if (s.length != 2) {
                             throw new Exception();
                         }
-                        radius = Double.parseDouble(s[1]);
+                        double radius = Double.parseDouble(s[1]);
                         String name = s[0];
                         int numGhosts = 0;
                         for (int x = 0; x < n; x++) {
@@ -285,13 +284,13 @@ public class Space {
             try {
                 String[] atomNums = scanner.nextLine().split(" ");
                 currLine++;
-                for (int x = 0; x < atomNums.length; x++){
-                    int atomNum = -1;
+                for (String num : atomNums) {
+                    int atomNum;
                     boolean unmoving = false;
                     try {
-                        atomNum = Integer.parseInt(atomNums[x]);
-                    } catch (NumberFormatException exc){
-                        atomNum = Integer.parseInt(atomNums[x].substring(0, atomNums[x].length() - 1));
+                        atomNum = Integer.parseInt(num);
+                    } catch (NumberFormatException exc) {
+                        atomNum = Integer.parseInt(num.substring(0, num.length() - 1));
                         unmoving = true;
                     }
                     //Four arrays used for temporary storage, never get too large since they're overwritten for each molecule
@@ -299,41 +298,40 @@ public class Space {
                     double[] atomXs = new double[atomNum];
                     double[] atomYs = new double[atomNum];
                     double[] atomZs = new double[atomNum];
-                    for (int y = 0; y < atomNum; y++){
+                    for (int y = 0; y < atomNum; y++) {
                         String[] atomVals = scanner.nextLine().split(" +"); //splits by all sets of spaces > 1
                         currLine++;
                         //If line is preceded by space, everything breaks since we get atomVals[0] == "". So, if that's true, start from 1.
                         int c = 0;
-                        if (atomVals[0].equals("")){
+                        if (atomVals[0].equals("")) {
                             c = 1;
                         }
                         atomSyms[y] = atomVals[c];
-                        atomXs[y] = Double.parseDouble(atomVals[c+1]);
-                        atomYs[y] = Double.parseDouble(atomVals[c+2]);
-                        atomZs[y] = Double.parseDouble(atomVals[c+3]);
+                        atomXs[y] = Double.parseDouble(atomVals[c + 1]);
+                        atomYs[y] = Double.parseDouble(atomVals[c + 2]);
+                        atomZs[y] = Double.parseDouble(atomVals[c + 3]);
                     }
                     //Set up hashmap to compare to atomSymbols in Molecule
                     HashMap<String, Integer> matcher = new HashMap<>();
-                    for (String s : atomSyms){
-                        if (matcher.containsKey(s)){
+                    for (String s : atomSyms) {
+                        if (matcher.containsKey(s)) {
                             matcher.replace(s, matcher.get(s) + 1);
-                        }
-                        else{
+                        } else {
                             matcher.put(s, 1);
                         }
                     }
                     boolean dbContainsMolecule = false;
-                    for (Molecule molecule : dbase){
-                        if (molecule.atomSymbols.equals(matcher)){
+                    for (Molecule molecule : dbase) {
+                        if (molecule.atomSymbols.equals(matcher)) {
                             //Copy molecule from dbase
                             dbContainsMolecule = true;
                             Molecule m = new Molecule(molecule);
                             //Move each atom in m to positions defined in Input.xyz
                             ArrayList<Atom> oldAtoms = m.atoms;
                             ArrayList<Atom> newAtoms = new ArrayList<>();
-                            for (int z = 0; z < atomSyms.length; z++){
-                                for (Atom atom : oldAtoms){
-                                    if (atom.symbol.equals(atomSyms[z])){
+                            for (int z = 0; z < atomSyms.length; z++) {
+                                for (Atom atom : oldAtoms) {
+                                    if (atom.symbol.equals(atomSyms[z])) {
                                         atom.x = atomXs[z];
                                         atom.y = atomYs[z];
                                         atom.z = atomZs[z];
@@ -346,13 +344,13 @@ public class Space {
                             m.atoms = newAtoms;
                             m.setCenterOfMass();
                             space.add(m);
-                            if (!unmoving){
+                            if (!unmoving) {
                                 moveableMolecules.add(m);
                             }
                             break;
                         }
                     }
-                    if (!dbContainsMolecule){
+                    if (!dbContainsMolecule) {
                         System.out.println("Error: Unable to find one or more molecules from Input.xyz in dbase.txt.");
                         System.exit(0);
                     }
@@ -421,26 +419,26 @@ public class Space {
             cfgPath = URLDecoder.decode(cfgPath, "utf-8");
             cfgPath = "/" + cfgPath.substring(1, cfgPath.lastIndexOf("/")) + "/config.txt";
             Scanner scanner = new Scanner(new File(cfgPath));
-            String out = "";
+            StringBuilder out = new StringBuilder();
             while (scanner.hasNextLine()){
-                out += scanner.nextLine() + "\n";
+                out.append(scanner.nextLine()).append("\n");
             }
             String copyPath = dir + "/config.txt";
-            FileWriter writer = new FileWriter(new File(copyPath));
-            writer.write(out);
+            FileWriter writer = new FileWriter(copyPath);
+            writer.write(out.toString());
             writer.close();
             if (useInput) { //If enabled, copy Input.xyz to new directory
                 String inputPath = Main.class.getProtectionDomain().getCodeSource().getLocation().getPath();
                 inputPath = URLDecoder.decode(inputPath, "utf-8");
                 inputPath = "/" + inputPath.substring(1, inputPath.lastIndexOf("/")) + "/Input.xyz";
                 scanner = new Scanner(new File(inputPath));
-                out = "";
+                out = new StringBuilder();
                 while (scanner.hasNextLine()) {
-                    out += scanner.nextLine() + "\n";
+                    out.append(scanner.nextLine()).append("\n");
                 }
                 copyPath = dir + "/Input.xyz";
-                writer = new FileWriter(new File(copyPath));
-                writer.write(out);
+                writer = new FileWriter(copyPath);
+                writer.write(out.toString());
                 writer.close();
             }
         }
@@ -450,51 +448,51 @@ public class Space {
         }
     }
     //Writes atom placements to .xyz file. Programs that read .xyz files will figure out what atoms go to what molecules, so that information is unnecessary
-    public String write(int outputFileNumber){
+    public void write(int outputFileNumber){
         try{
         	String pathName = dir + "/Output" + outputFileNumber + ".xyz"; //dir specified in makeDirectory()
-            FileWriter writer = new FileWriter(new File(pathName));
+            FileWriter writer = new FileWriter(pathName);
             double toothEnergy = calcEnergy();
             //Write to file in correct .xyz output format
-            String content = "          " + numAtoms() + "\nEnergy: " + toothEnergy + " Kcal/mole";
+            StringBuilder content = new StringBuilder("          " + numAtoms() + "\nEnergy: " + toothEnergy + " Kcal/mole");
             for (Molecule m : space){
                 for (Atom a : m.atoms){
                     if (a.symbol.contains("*")){
                         continue;
                     }
-                    content += "\n " + a.symbol;
+                    content.append("\n ").append(a.symbol);
                     if (a.symbol.length() == 1) {
-                    	content += " ";
+                    	content.append(" ");
                     }
                     //Round all doubles to 10 decimal places to keep file neat
                     String[] x = Double.toString(Precision.round(a.x, 10, BigDecimal.ROUND_HALF_UP)).split("\\.");
-                    content += "  ";
+                    content.append("  ");
                     for (int b = 0; b + x[0].length() < 4; b++) {
-                		content += " ";
+                		content.append(" ");
                 	}
-                    content += x[0] + "." + x[1];
+                    content.append(x[0]).append(".").append(x[1]);
                 	for (int b = 0; b + x[1].length() < 10; b++) {
-                		content += "0";
+                		content.append("0");
                 	}
 
                 	String[] y = Double.toString(Precision.round(a.y, 10, BigDecimal.ROUND_HALF_UP)).split("\\.");
-                    content += "  ";
+                    content.append("  ");
                     for (int b = 0; b + y[0].length() < 4; b++) {
-                		content += " ";
+                		content.append(" ");
                 	}
-                    content += y[0] + "." + y[1];
+                    content.append(y[0]).append(".").append(y[1]);
                 	for (int b = 0; b + y[1].length() < 10; b++) {
-                		content += "0";
+                		content.append("0");
                 	}
 
                 	String[] z = Double.toString(Precision.round(a.z, 10, BigDecimal.ROUND_HALF_UP)).split("\\.");
-                    content += "  ";
+                    content.append("  ");
                     for (int b = 0; b + z[0].length() < 4; b++) {
-                		content += " ";
+                		content.append(" ");
                 	}
-                    content += z[0] + "." + z[1];
+                    content.append(z[0]).append(".").append(z[1]);
                 	for (int b = 0; b + z[1].length() < 10; b++) {
-                		content += "0";
+                		content.append("0");
                 	}
                 }
             }
@@ -504,20 +502,18 @@ public class Space {
                 minEnergyToothNum = outputFileNumber;
             }
             writer.close();
-            return pathName;
         }
         catch(Exception exc){
             System.out.println("Error: Failed to write to " + dir + "/Output" + outputFileNumber + ".xyz");
             System.exit(0);
-            return "Error";
         }
     }
     //Return number of atoms in space, used for write() as part of .xyz file format
     private int numAtoms(){
         int ret = 0;
-        for (int x = 0; x < space.size(); x++){
-            for (int y = 0; y < space.get(x).atoms.size(); y++){
-                if (!space.get(x).atoms.get(y).symbol.contains("*")){ //Exclude ghosts from count
+        for (Molecule molecule : space) {
+            for (int y = 0; y < molecule.atoms.size(); y++) {
+                if (!molecule.atoms.get(y).symbol.contains("*")) { //Exclude ghosts from count
                     ret++;
                 }
             }
@@ -526,14 +522,14 @@ public class Space {
     }
     //Prints database List as string, for debugging only
     public String printDbase() {
-    	String ret = "";
+    	StringBuilder ret = new StringBuilder();
     	for (int x = 0; x < dbase.size(); x++) {
     		if ((x != 0) && (x % 3 == 0)) {
-    			ret += "\n";
+    			ret.append("\n");
     		}
-    		ret += dbase.get(x).name + "\t";
+    		ret.append(dbase.get(x).name).append("\t");
     	}
-    	return ret;
+    	return ret.toString();
     }
     //Calculates total energy of space, used for console output at end of propagation and each sawtooth
     public double calcEnergy() {
@@ -599,11 +595,7 @@ public class Space {
                 return new Pair<>(0.0, 0);
             }
         }
-    	/**if (m.tempx > size * 1.5 || m.tempy > size * 1.5 || m.tempz > size * 1.5 || m.tempx < 0 || m.tempy < 0 || m.tempz < 0){ //If molecule would be moved out of valid space, reject the move
-            m.resetTemps();
-            return false;
-        }**/
-    	double eStart = 0;
+        double eStart = 0;
     	double eEnd = 0;
 		for (Molecule n : space) {
 			if (m != n) {
@@ -632,68 +624,66 @@ public class Space {
         return moveableMolecules.get(x);
     }
     //Writes by appending to file in order to create a movie .xyz file that can be viewed in Avogadro
-    public String writeMovie(int outputStartNumber, int outputEndNumber){
+    public void writeMovie(int outputStartNumber, int outputEndNumber){
         try{
             String pathName = dir + "/Output" + outputStartNumber + "_" + outputEndNumber + "_Movie.xyz"; //dir specified in makeDirectory()
-            FileWriter writer = new FileWriter(new File(pathName), true);
+            FileWriter writer = new FileWriter(pathName, true);
             //Write to file in correct .xyz output format
-            String content = "          " + numAtoms() + "\nEnergy: " + calcEnergy() + " Kcal/mole";
+            StringBuilder content = new StringBuilder("          " + numAtoms() + "\nEnergy: " + calcEnergy() + " Kcal/mole");
             for (Molecule m : space){
                 for (Atom a : m.atoms){
                     if (a.symbol.contains("*")){
                         continue;
                     }
-                    content += "\n " + a.symbol;
+                    content.append("\n ").append(a.symbol);
                     if (a.symbol.length() == 1) {
-                    	content += " ";
+                    	content.append(" ");
                     }
                     //Round all doubles to 10 decimal places to keep file neat
                     String[] x = Double.toString(Precision.round(a.x, 10, BigDecimal.ROUND_HALF_UP)).split("\\.");
-                    content += "  ";
+                    content.append("  ");
                     for (int b = 0; b + x[0].length() < 4; b++) {
-                		content += " ";
+                		content.append(" ");
                 	}
-                    content += x[0] + "." + x[1];
+                    content.append(x[0]).append(".").append(x[1]);
                 	for (int b = 0; b + x[1].length() < 10; b++) {
-                		content += "0";
+                		content.append("0");
                 	}
 
                 	String[] y = Double.toString(Precision.round(a.y, 10, BigDecimal.ROUND_HALF_UP)).split("\\.");
-                    content += "  ";
+                    content.append("  ");
                     for (int b = 0; b + y[0].length() < 4; b++) {
-                		content += " ";
+                		content.append(" ");
                 	}
-                    content += y[0] + "." + y[1];
+                    content.append(y[0]).append(".").append(y[1]);
                 	for (int b = 0; b + y[1].length() < 10; b++) {
-                		content += "0";
+                		content.append("0");
                 	}
 
                 	String[] z = Double.toString(Precision.round(a.z, 10, BigDecimal.ROUND_HALF_UP)).split("\\.");
-                    content += "  ";
+                    content.append("  ");
                     for (int b = 0; b + z[0].length() < 4; b++) {
-                		content += " ";
+                		content.append(" ");
                 	}
-                    content += z[0] + "." + z[1];
+                    content.append(z[0]).append(".").append(z[1]);
                 	for (int b = 0; b + z[1].length() < 10; b++) {
-                		content += "0";
+                		content.append("0");
                 	}
                 }
             }
             writer.write(content + "\n");
             writer.close();
-            return pathName;
         }
         catch(Exception exc){
             System.out.println("Error: Failed to write to " + dir + "/Output" + outputStartNumber + "_" + outputEndNumber + "_Movie.xyz");
             System.exit(0);
-            return "Error";
         }
     }
     //Writes output and logs to appropriate file in dir, then prints to terminal
     public void log(String text){
         try {
             String pathName = dir + "/log.txt";
-            FileWriter writer = new FileWriter(new File(pathName), true);
+            FileWriter writer = new FileWriter(pathName, true);
             writer.write(text + "\n");
             writer.close();
             System.out.println(text);
@@ -708,7 +698,7 @@ public class Space {
         if (staticTemp){
             try {
                 String pathName = dir + "/energies.txt";
-                FileWriter writer = new FileWriter(new File(pathName), true);
+                FileWriter writer = new FileWriter(pathName, true);
                 writer.write(energy + "\n");
                 writer.close();
             }
@@ -723,8 +713,8 @@ public class Space {
             try{
                 double ratio = (double) accepted / (double) total;
                 String pathName = dir + "/acceptance_ratios.txt";
-                FileWriter writer = new FileWriter(new File(pathName), true);
-                writer.write(new BigDecimal(temperature).setScale(2, BigDecimal.ROUND_HALF_UP) + " " + new BigDecimal(ratio).setScale(5, BigDecimal.ROUND_HALF_UP) + "\n");
+                FileWriter writer = new FileWriter(pathName, true);
+                writer.write(new BigDecimal(temperature).setScale(2, RoundingMode.HALF_UP) + " " + new BigDecimal(ratio).setScale(5, RoundingMode.HALF_UP) + "\n");
                 writer.close();
             }
             catch (Exception exc){

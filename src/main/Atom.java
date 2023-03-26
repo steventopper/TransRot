@@ -95,7 +95,6 @@ public class Atom {
         double B;
         double C;
         double D;
-        double Q;
         if (isPairwise){
             Pair<String, String> key = new Pair<>(this.symbol, atom.symbol);
             double[] value = pairwiseDbase.get(key);

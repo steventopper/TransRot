@@ -6,7 +6,7 @@ import org.apache.commons.math3.util.Precision;
 import java.math.BigDecimal;
 
 public class Main {
-    private static MersenneTwister r = new MersenneTwister();
+    private static final MersenneTwister r = new MersenneTwister();
     public static void main(String[] args) {
         Space s = new Space(10);
         long time1 = System.nanoTime();
@@ -29,7 +29,7 @@ public class Main {
         s.makeDirectory();
         long time2 = System.nanoTime();
         String stamp = timestamp(time1, time2);
-        String str = s.write(0);
+        s.write(0);
         String initText = "Initialization ";
         if (!s.useInput){
         	initText += "and propagation ";
