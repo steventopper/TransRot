@@ -105,6 +105,10 @@ public class Main {
 				t = 0;
 				isDoubleCycle = true;
 				x--;
+				maxD /= 100;
+				maxRot /= 100;
+				magwalkProbRot = 0;
+				magwalkProbTrans = 0;
 			}
 			else{
 				s.write(x + 1);

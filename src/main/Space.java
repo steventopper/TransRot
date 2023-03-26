@@ -713,7 +713,7 @@ public class Space {
                 writer.close();
             }
             catch (Exception exc){
-                System.out.println("Error: Failed to writer to " + dir + "/energies.txt.");
+                System.out.println("Error: Failed to write to " + dir + "/energies.txt.");
                 System.exit(0);
             }
         }
