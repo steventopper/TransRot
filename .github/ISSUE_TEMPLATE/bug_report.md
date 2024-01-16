@@ -2,7 +2,7 @@
 name: Bug report
 about: Report a bug/issue to help us improve TransRot
 title: "[BUG]"
-labels: ''
+labels: bug
 assignees: ''
 
 ---
