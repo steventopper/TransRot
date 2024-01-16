@@ -6,6 +6,7 @@ import java.net.URLDecoder;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Scanner;
 import org.apache.commons.math3.random.MersenneTwister;
 import org.apache.commons.math3.util.Pair;
@@ -400,6 +401,37 @@ public class Space {
             System.exit(0);
         }
     }
+    //Set up pair
+    public void setupPairVals(){
+        if (isPairwise){
+            //Read pair vals from param_overrides.txt
+            readPairwise();
+            return;
+        }
+        //Compile unique atoms from molecules in dbase
+        ArrayList<Atom> uniqueAtoms = new ArrayList<>();
+        for (Molecule molecule : dbase){
+            for (Atom atom : molecule.atoms){
+                if (!uniqueAtoms.contains(atom)){
+                    uniqueAtoms.add(atom);
+                }
+            }
+        }
+        //Determine pairwise params and put into pairwiseDbase
+        for (Atom atom1 : uniqueAtoms){
+            for (Atom atom2 : uniqueAtoms){
+                double A = Math.sqrt(atom1.a * atom2.a);
+                double B = (atom1.b + atom2.b) / 2;
+                double C = Math.sqrt(atom1.c * atom2.c);
+                double D = Math.sqrt(atom1.d * atom2.d);
+                Pair<String, String> key1 = new Pair<>(atom1.symbol, atom2.symbol);
+                Pair<String, String> key2 = new Pair<>(atom2.symbol, atom1.symbol);
+                double[] value = {A, B, C, D};
+                pairwiseDbase.put(key1, value);
+                pairwiseDbase.put(key2, value);
+            }
+        }
+    }
     //Creates new directory to place output files into
     public void makeDirectory(){
         //Get current datetime and create directory name
@@ -733,5 +765,23 @@ public class Space {
             System.out.println("Error: Failed to write to " + dir + "/min_energy_structure" + minEnergyToothNum + ".xyz");
             System.exit(0);
         }
+    }
+    public void writePairInteractions(){
+        String writePath = dir + "/pair_interactions.txt";
+        //Combine all pairs into file
+        StringBuilder output = new StringBuilder();
+        for (Map.Entry<Pair<String, String>, double[]> entry : pairwiseDbase.entrySet()){
+            Pair<String, String> key = entry.getKey();
+            double[] value = entry.getValue();
+            output.append(key.getFirst()).append("\t").append(key.getSecond()).append("\t").append(value[0]).append("\t").append(value[1]).append("\t").append(value[2]).append("\t").append(value[3]).append("\n");
+        }
+        try {
+            FileWriter writer = new FileWriter(writePath, false);
+            writer.write(output.toString());
+            writer.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
     }
 }

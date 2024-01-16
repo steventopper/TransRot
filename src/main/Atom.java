@@ -95,24 +95,16 @@ public class Atom {
         double B;
         double C;
         double D;
-        if (isPairwise){
-            Pair<String, String> key = new Pair<>(this.symbol, atom.symbol);
-            double[] value = pairwiseDbase.get(key);
-            if (value == null){
-                System.out.println("Error: pairwise.txt does not contain a pairing for " + this.symbol + " and " + atom.symbol + ".");
-                System.exit(0);
-            }
-            A = value[0];
-            B = value[1];
-            C = value[2];
-            D = value[3];
+        Pair<String, String> key = new Pair<>(this.symbol, atom.symbol);
+        double[] value = pairwiseDbase.get(key);
+        if (value == null){
+            System.out.println("Error: pairwise.txt does not contain a pairing for " + this.symbol + " and " + atom.symbol + ".");
+            System.exit(0);
         }
-        else {
-            A = Math.sqrt(this.a * atom.a);
-            B = (this.b + atom.b) / 2;
-            C = Math.sqrt(this.c * atom.c);
-            D = Math.sqrt(this.d * atom.d);
-        }
+        A = value[0];
+        B = value[1];
+        C = value[2];
+        D = value[3];
     	double r = Math.sqrt(Math.pow(atom.x - tempx, 2) + Math.pow(atom.y - tempy, 2) + Math.pow(atom.z - tempz, 2)); //Distance between atoms
     	return (kTimesQ * atom.q / r) + A * Math.exp(-1 * B * r) - (C / Math.pow(r,  6)) + (D / Math.pow(r,  12));
     }
@@ -127,5 +119,9 @@ public class Atom {
     	x = tempx;
     	y = tempy;
     	z = tempz;
+    }
+    @Override
+    public boolean equals(Object object){
+        return object.getClass().equals(this.getClass()) && this.symbol.equals(((Atom) object).symbol);
     }
 }

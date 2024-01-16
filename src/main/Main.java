@@ -12,10 +12,7 @@ public class Main {
         long time1 = System.nanoTime();
     	s.readDB();
     	s.readCFG();
-		if (s.isPairwise){
-			//Read pairwise interaction params from pairwise.txt
-			s.readPairwise();
-		}
+		s.setupPairVals();
     	if (s.useInput) {
     		//Read molecules from Input.xyz, do not propagate
 			s.readInput();
@@ -27,6 +24,7 @@ public class Main {
 			}
 		}
         s.makeDirectory();
+		s.writePairInteractions();
         long time2 = System.nanoTime();
         String stamp = timestamp(time1, time2);
         s.write(0);
