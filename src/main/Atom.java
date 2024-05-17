@@ -4,7 +4,7 @@ import org.apache.commons.math3.util.Pair;
 import java.util.HashMap;
 
 public class Atom {
-	private static final double K_VALUE = 332.0637133;
+	public static final double K_VALUE = 332.0637133;
     String symbol;
     double x;
     double y;
@@ -121,7 +121,13 @@ public class Atom {
     	z = tempz;
     }
     @Override
-    public boolean equals(Object object){
+    public final boolean equals(Object object){
         return object.getClass().equals(this.getClass()) && this.symbol.equals(((Atom) object).symbol);
+    }
+    @Override
+    public final int hashCode(){
+        int result = 17;
+        result = result * 31 + symbol.hashCode();
+        return result;
     }
 }

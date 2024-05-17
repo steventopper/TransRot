@@ -24,7 +24,7 @@ public class Main {
 			}
 		}
         s.makeDirectory();
-		s.writePairInteractions();
+		s.writeInteractionParameters();
         long time2 = System.nanoTime();
         String stamp = timestamp(time1, time2);
         s.write(0);

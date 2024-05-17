@@ -12,6 +12,7 @@ import org.apache.commons.math3.random.MersenneTwister;
 import org.apache.commons.math3.util.Pair;
 import org.apache.commons.math3.util.Precision;
 import java.time.LocalDateTime;
+import java.util.stream.IntStream;
 
 public class Space {
     //All set in config.txt
@@ -766,14 +767,96 @@ public class Space {
             System.exit(0);
         }
     }
-    public void writePairInteractions(){
-        String writePath = dir + "/pair_interactions.txt";
-        //Combine all pairs into file
+    public void writeInteractionParameters(){
+        String writePath = dir + "/interaction_params.txt";
         StringBuilder output = new StringBuilder();
-        for (Map.Entry<Pair<String, String>, double[]> entry : pairwiseDbase.entrySet()){
+        ArrayList<Atom> atomsList = new ArrayList<>();
+
+        //Write all molecule formulas
+        output.append("Molecular Formulas:\n");
+        for (Molecule mol : dbase){
+            output.append(mol.name).append("\n");
+            atomsList.addAll(mol.atoms);
+        }
+
+        //Declare units used
+        output.append("\nUnits:\nDistances in Angstroms, charges in atomic charge units, energies in Kcal/mol\n");
+
+        //Declare Kappa value
+        output.append("\nKappa = ").append(Atom.K_VALUE).append("\n");
+
+        //List all atomic charges
+        output.append("\nAtomic Charges:\n").append("Symbol  Charge\n");
+        int[] maxLen = {0, 0, 0};
+        for (Atom atom : atomsList.stream().distinct().toArray(Atom[]::new)){
+            output.append(atom.symbol);
+            IntStream.range(0, 7 - atom.symbol.length() + (atom.q >= 0 ? 1 : 0)).forEach(x -> output.append(" "));
+            output.append(atom.q).append("\n");
+            maxLen[0] = Math.max(maxLen[0], Double.toString(atom.a).length());
+            maxLen[1] = Math.max(maxLen[1], Double.toString(atom.b).length());
+            maxLen[2] = Math.max(maxLen[2], Double.toString(atom.c).length());
+        }
+
+        //List all pair potentials
+        output.append("\nPair Potentials:\nParticles   A           B           C           D");
+        HashMap<String, ArrayList<String>> alreadyAdded = new HashMap<>();
+        for (Map.Entry<Pair<String, String>, double[]> entry : pairwiseDbase.entrySet()) {
             Pair<String, String> key = entry.getKey();
+            if (!alreadyAdded.containsKey(key.getFirst())) {
+                alreadyAdded.put(key.getFirst(), new ArrayList<>());
+            }
+            if (alreadyAdded.getOrDefault(key.getFirst(), new ArrayList<>()).contains(key.getSecond())
+                    || alreadyAdded.getOrDefault(key.getSecond(), new ArrayList<>()).contains(key.getFirst())) continue;
+            alreadyAdded.get(key.getFirst()).add(key.getSecond());
             double[] value = entry.getValue();
-            output.append(key.getFirst()).append("\t").append(key.getSecond()).append("\t").append(value[0]).append("\t").append(value[1]).append("\t").append(value[2]).append("\t").append(value[3]).append("\n");
+            output.append("\n").append(key.getFirst());
+            IntStream.range(0, 4 - key.getFirst().length()).forEach(x -> output.append(" "));
+            output.append(key.getSecond());
+            IntStream.range(0, 4 - key.getSecond().length()).forEach(x -> output.append(" "));
+            StringBuilder a = new StringBuilder();
+            a.append(value[0]);
+            while (a.length() < 8){
+                a.append(0);
+            }
+            while (a.length() > 8){
+                char pop = a.charAt(a.length() - 1);
+                a.deleteCharAt(a.length() - 1);
+                if (pop == '.') break;
+            }
+            output.append("    ").append(a);
+            StringBuilder b = new StringBuilder();
+            b.append(value[1]);
+            while (b.length() < 8){
+                b.append(0);
+            }
+            while (b.length() > 8){
+                char pop = b.charAt(b.length() - 1);
+                b.deleteCharAt(b.length() - 1);
+                if (pop == '.') break;
+            }
+            output.append("    ").append(b);
+            StringBuilder c = new StringBuilder();
+            c.append(value[2]);
+            while (c.length() < 11){
+                c.append(0);
+            }
+            while (c.length() > 11){
+                char pop = c.charAt(c.length() - 1);
+                c.deleteCharAt(c.length() - 1);
+                if (pop == '.') break;
+            }
+            output.append("    ").append(c);
+            StringBuilder d = new StringBuilder();
+            d.append(value[3]);
+            while (d.length() < 11){
+                d.append(0);
+            }
+            while (d.length() > 11){
+                char pop = d.charAt(d.length() - 1);
+                d.deleteCharAt(d.length() - 1);
+                if (pop == '.') break;
+            }
+            output.append("    ").append(d);
         }
         try {
             FileWriter writer = new FileWriter(writePath, false);
@@ -782,6 +865,5 @@ public class Space {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-
     }
 }
