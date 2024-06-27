@@ -162,4 +162,4 @@ To report a bug or issue, or to submit a feature request, please create a new is
 
 ## More Information
 
-For more information regarding TransRot, optimization videos, and examples, visit [the project page](https://engfac.cooper.edu/topper/764).
+For more information regarding TransRot, optimization videos, and examples, visit the Wiki for this project. You may also visit [the project page](https://engfac.cooper.edu/topper/764) at Cooper Union. 
