@@ -116,7 +116,7 @@ Interactions between unlike atoms (i,j) on different particles are obtained with
 <img src=https://user-images.githubusercontent.com/6625247/132400815-5e64203d-a145-48f1-b484-a354d82b8bf0.PNG width=18% height=18%> \
 Geometric averages are used for the (A,C,D) parameters, as in \
 <img src=https://user-images.githubusercontent.com/6625247/132400916-4a47e403-6b84-4136-8aa5-ccfa4c98fd0c.PNG width=15% height=15%> \
-When adding entries for a particle to the dbase, all numbers or symbols on the same row must be separated by **at least 2 spaces**. The format for appending a particle is shown below:
+When adding entries for a particle to the dbase, all numbers or symbols on the same row must be separated by **at least 2 spaces**. Also, take care not to introduce any spaces after the end of each line of text. The format for appending a particle is shown below:
 
 Number of Atoms In Particle \
 Molecular Formula Molecular Radius (for random placement purposes only) \
@@ -124,6 +124,8 @@ Atomic Symbol &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; x &nbsp; &nbsp; &nbsp; y &nbsp; 
 Atomic Symbol &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; x &nbsp; &nbsp; &nbsp; y &nbsp; &nbsp; &nbsp; z &nbsp; &nbsp; &nbsp; A &nbsp; &nbsp; &nbsp; B &nbsp; &nbsp; &nbsp; C &nbsp; &nbsp; &nbsp; D &nbsp; &nbsp; &nbsp; Q &nbsp; &nbsp; &nbsp; mass \
 ... \
 Continued for each atom in the particle
+
+
 
 For comparison, the parameters provided in the sample dbase file are appropriate for simulations of H2O clusters using the TIP3P interaction potential due to Jorgensen et al. (1) and are at the present time documented correctly on Wikipedia (2). In our testing, TransRot was used to successfully find the global minimum-energy structures of TIP3P water clusters (H2O)n with (n=2-8). (3)
  
