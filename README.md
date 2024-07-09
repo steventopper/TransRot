@@ -131,7 +131,7 @@ For comparison, the parameters provided in the sample dbase file are appropriate
  
  <ol>
     <li>Jorgensen WL, Chandrasekhar J, Madura JD, Impey RW, Klein ML (1983). "Comparison of simple potential functions for simulating liquid water". Journal of Chemical Physics. 79 (2): 926–935.</li>
-    <li>Wikipedia contributors, "Water model," Wikipedia, The Free Encyclopedia, https://en.wikipedia.org/w/index.php?title=Water_model&oldid=1035969800 (accessed September 7, 2021).</li>
+    <li>Wikipedia contributors, "Water model," Wikipedia, The Free Encyclopedia (https://en.wikipedia.org/wiki/Water_model) (accessed September 7, 2021).</li>
     <li>Wales DJ, Hodges MP (1998). “Global minima of water clusters (H2O)n, n le 21, described by an empirical potential”. Chemical Physics Letters 286: 65-72.</li>
 </ol>
 
