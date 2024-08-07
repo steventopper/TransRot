@@ -38,7 +38,7 @@ TransRot comes with a sample database file that contains entries for the three p
 <ul>
     <li>NH4+</li>
     <li>Cl-</li>
-    <li>H2O</li>
+    <li>H2O (using TIP3P)</li>
 </ul>
 The cluster to be studied can consist of any desired number of any of the particles defined within the database, as specified in the config file (see below). Other atoms or molecules can be added to the database as needed, see "How to Add New Molecules to the Database". 
 
