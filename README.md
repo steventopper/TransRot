@@ -17,7 +17,7 @@ TransRot assumes that all molecules are internally rigid throughout the simulati
 
 Defining a “particle” to be either an atom or a molecule, all particles interact with one another according to an effective pair potential. The geometry of each particle as well as the parameters of the pairwise interaction potential must be chosen by the user, and are supplied within an input file, with the format described below (see "How to Add New Molecules to the Database").
 
-In the current version, TransRot does not itself fully optimize the set of final structures predicted at the end of the annealing schedule. It is intended that the user pass the final structures predicted by TransRot to other programs (including Psi4, Q-Chem, Spartan and Gaussian) for full geometry optimization using quantum mechanics methods. We anticipate adding full geometry optimization of the final structures in a future version.
+In the current version, TransRot does not itself fully optimize the set of final structures predicted at the end of the annealing schedule. It is intended that the user pass the final structures predicted by TransRot to other programs (including Psi4, Orca, Q-Chem, Spartan and Gaussian) for full geometry optimization using quantum mechanics methods. We anticipate adding full geometry optimization of the final structures in a future version.
 
 ### Important note: 
 
