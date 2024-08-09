@@ -127,7 +127,7 @@ Continued for each atom in the particle
 
 
 
-For comparison, the parameters provided in the sample dbase file are appropriate for simulations of H2O clusters using the TIP3P interaction potential due to Jorgensen et al. (1) and are at the present time documented correctly on Wikipedia (2). In our testing, TransRot was used to successfully find the global minimum-energy structures of TIP3P water clusters (H2O)n with (n=2-8). (3)
+For comparison, the parameters provided in the sample dbase file are appropriate for simulations of H2O clusters using the TIP3P interaction potential due to Jorgensen et al. (1) and are at the present time documented correctly on Wikipedia (2). In our testing, TransRot was used to successfully find the global minimum-energy structures of TIP3P and TIP4P water clusters (H2O)n with (n=2-8). (3)
  
  <ol>
     <li>Jorgensen WL, Chandrasekhar J, Madura JD, Impey RW, Klein ML (1983). "Comparison of simple potential functions for simulating liquid water". Journal of Chemical Physics. 79 (2): 926–935.</li>
