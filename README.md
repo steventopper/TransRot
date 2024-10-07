@@ -1,7 +1,7 @@
 # TransRot Version 1.6.4
 
 Steven L. Topper and Robert Q. Topper\
-School of Engineering\
+Albert Nerken School of Engineering\
 The Cooper Union \
   for the Advancement of Science and Art\
 New York, NY 10003\
