@@ -138,7 +138,8 @@ For comparison, the parameters provided in the sample dbase file are appropriate
 ## Massless Interaction Points
 Massless interaction points can be defined in the database by including an asterisk (\*) anywhere in the atomic symbol. \
 Massless interaction points do not contribute towards the center of mass of the particle and will not be written into output files or output movie files. \
-A particle cannot be made entirely out of massless interaction points; it must contain at least one atom.
+A particle cannot be made entirely out of massless interaction points; it must contain at least one atom. \
+These points are treated by the code as "massless atoms." Therefore, the total number of atoms used to define the particle in the dbase file must include the number of massless interaction points. For example, TIP4P water has three physical atoms and one massless interaction point, so the number "4"(=3+1) must appear at the top of the dbase entry.
 
 ## Licensing Information
 TransRot is by default licensed under All Rights Reserved. However, we allow usage of, as well as the creation of derivative works of, TransRot under the following terms (hereforth referred to as the "TransRot License"):
