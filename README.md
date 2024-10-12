@@ -1,4 +1,4 @@
-# TransRot Version 1.6.4
+# TransRot Version 1.7.0
 
 Steven L. Topper and Robert Q. Topper\
 Albert Nerken School of Engineering\
@@ -76,8 +76,10 @@ All run parameters are set in config.txt. **VERY IMPORTANT:** Each parameter mus
     <li>Use Input.xyz (true/false): Disables generation of a random cluster, instead using Input.xyz as the starting cluster. Input.xyz uses the standard .xyz file format, with the comment line denotating the number of atoms per particle, as read from top to bottom, separated by spaces. If desired, a particle can be marked as "frozen" (i.e. will not move or rotate during annealing) by following the number of atoms for that particle with the letter F.
         </br>Example: For an Input.xyz file containing 3 ammonium ions, followed by 4 chloride ions, followed by 1 "frozen" ammonium ion, the comment line would be: <pre> 5 5 5 1 1 1 1 5F </pre> <b>Important:</b> While this option is enabled, Length of Cubic Space will not automatically increase and must be manually set to a proper value.</li>
     <li>0K Finale (true/false): Enables the final tooth to repeat itself at a static temperature of 0K. The output file for this tooth replaces the output file for the final tooth, and its movie file will be appended to the final output movie file.</li>
-    <li>Static Temperature (true/false): This option is designed to help with determining other values such as Max Translation Distance. When enabled, Number of Teeth will automatically be set to 1. During this tooth, the temperature will remain at the starting temperature.</li>
+    <li>Static Temperature (true/false): This option is designed to help with determining other values such as Max Translation Distance. When enabled, Number of Teeth and Points per Tooth will be considered as set to 1. During this tooth, the temperature will remain at the starting temperature.</li>
     <li>Write Energies When Static Temperature (true/false): When Static Temperature is enabled, enabling this option saves the energy of the system to energies.txt after each attempted move. Enabling this option may cause TransRot to run significantly slower.</li>
+    <li>Write Configurational Heat Capacities (true/false): Enabling this option adds an additional file to the output, 'configurational_heat_capacities.txt'. For each distinct temperature, the file will contain a line with the temperature, the average energy at that temperature, and the configurational heat capacity at that temperature (C = (<V<sup>2</sup>> - < V ><sup>2</sup>) / (k<sub>B</sub>T<sup>2</sup>). </li>
+    <li>Number of Equilibration Configurations: When Static Temperature and Write Configurational Heat Capacities are both enabled, the first N energies will not be considered in the configurational heat capacity, where N is the value set for Number of Equilibration Configurations.</li>
     <li>Override Interaction Parameters (true/false): This option allows users to define custom interactions between various atoms. When enabled, combinations of Ai, Bi, Ci, and Di will be read from param_overrides.txt instead of being generated from the values in dbase.txt. These values must be set individually for each unique combination of atoms in the cluster.
 </br>When defining interactions in pairwise.txt, all numbers or symbols on the same row must be separated by **at least 2 spaces**. The format for appending an interaction is shown below:
 </br> <pre>First Atomic Symbol &nbsp; Second Atomic Symbol &nbsp; Ai &nbsp; Bi &nbsp; Ci &nbsp; Di </pre>

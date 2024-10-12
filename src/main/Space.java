@@ -33,9 +33,11 @@ public class Space {
     boolean useInput;
     boolean extraCycle;
     boolean staticTemp;
+    boolean writeEnergiesEnabled;
+    boolean writeConfHeatCapacitiesEnabled;
+    int eqConfigs;
     boolean isPairwise;
     boolean writeAcceptanceRatios;
-    boolean writeEnergiesEnabled;
 
     private String dir; //Directory of .xyz files to be saved in, created at runtime
 
@@ -49,7 +51,7 @@ public class Space {
     private final ArrayList<Molecule> dbase;
     private final HashMap<Pair<String, String>, double[]> pairwiseDbase;
     private static final MersenneTwister r = new MersenneTwister(); //Used instead of Java.Random for greater accuracy in randomization
-    private static final double BOLTZMANN_CONSTANT = 0.0019872;
+    static final double BOLTZMANN_CONSTANT = 0.0019872;
     public Space(double s){
         size = s;
         list = new ArrayList<>();
@@ -145,7 +147,7 @@ public class Space {
                         try {
                             n = Integer.parseInt(words[0]);
                         } catch (Exception exc) {
-                            continue;
+                            throw new Exception();
                         }
                         ArrayList<Atom> atoms = new ArrayList<>();
                         if (!scanner.hasNextLine()) {
@@ -239,6 +241,10 @@ public class Space {
                 staticTemp = Boolean.parseBoolean(scanner.nextLine().split(" " + " +")[1]);
                 currLine++;
                 writeEnergiesEnabled = Boolean.parseBoolean(scanner.nextLine().split(" " + " +")[1]);
+                currLine++;
+                writeConfHeatCapacitiesEnabled = Boolean.parseBoolean(scanner.nextLine().split(" " + " +")[1]);
+                currLine++;
+                eqConfigs = Integer.parseInt(scanner.nextLine().split(" " + " +")[1]);
                 currLine++;
                 isPairwise = Boolean.parseBoolean(scanner.nextLine().split(" " + " +")[1]);
                 currLine++;
@@ -864,6 +870,22 @@ public class Space {
             writer.close();
         } catch (IOException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    public void writeConfigurationalHeatCapacity(double temperature, double avgEnergy, double configurationalHeatCapacity){
+        String writePath = dir + "/configurational_heat_capacities.txt";
+        String output = temperature + "\t" + avgEnergy + "\t" + configurationalHeatCapacity + "\n";
+
+        //Write configurational heat capacity
+        try {
+            FileWriter writer = new FileWriter(writePath, true);
+            writer.write(output);
+            writer.close();
+        }
+        catch (Exception exc){
+            System.out.println("Error: Failed to write to " + dir + "/configurational_heat_capacities.txt");
+            System.exit(1);
         }
     }
 }

@@ -17,6 +17,8 @@ Use Input.xyz (true/false):                           false
 0K Finale (true/false):                               false
 Static Temperature (true/false):                      false
 Write Energies When Static Temperature (true/false):  true
+Write Configurational Heat Capacities (true/false):   true
+Number of Equilibration Configurations:               1000
 Override Interaction Parameters (true/false):         false
 Write Acceptance Ratios (true/false):                 true
 

@@ -4,6 +4,7 @@ import org.apache.commons.math3.util.Pair;
 import org.apache.commons.math3.util.Precision;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 public class Main {
     private static final MersenneTwister r = new MersenneTwister();
@@ -39,6 +40,7 @@ public class Main {
         time1 = System.nanoTime();
         if (s.staticTemp){
         	s.numTeeth = 1;
+			s.pointsPerTooth = 1;
         	if (s.writeEnergiesEnabled) {
 				s.writeEnergy(startingEnergy);
 			}
@@ -59,6 +61,9 @@ public class Main {
     		int accepted = 0;
     		int total = 0;
     		for (int y = 0; y < ptsPerTooth; y++) {
+				//Energy counters used for average energy
+				double totalEnergy = 0;
+				double totalSquaredEnergy = 0;
     			for (int z = 0; z < numMovesPerPoint; z++) {
     				total++;
     				Molecule m = s.randMolecule(); //Pick a random molecule
@@ -79,21 +84,31 @@ public class Main {
 							values = s.move(m, maxD * magwalkFactorTrans, t); //Magwalking multiplies distance maximum by magwalk factor (specified in config file)
                         }
                     }
-
+					startingEnergy += values.getFirst();
+					if (!s.staticTemp || z > s.eqConfigs) {
+						totalEnergy += startingEnergy;
+						totalSquaredEnergy += Math.pow(startingEnergy, 2);
+					}
                     if (s.writeEnergiesEnabled) {
-                    	startingEnergy += values.getFirst();
 						s.writeEnergy(startingEnergy);
 					}
                     accepted += values.getSecond();
     			}
     			s.writeAcceptance(t, accepted, total);
+				if (s.writeConfHeatCapacitiesEnabled) {
+					double roundedTemperature = new BigDecimal(t).setScale(2, RoundingMode.HALF_UP).doubleValue();
+					if (roundedTemperature == 0) continue;
+					double avgEnergy = totalEnergy / numMovesPerPoint;
+					double avgSquaredEnergy = totalSquaredEnergy / numMovesPerPoint;
+					double configurationalHeatCapacity = (Math.pow(avgEnergy, 2) - avgSquaredEnergy) / (Space.BOLTZMANN_CONSTANT * Math.pow(t, 2));
+					s.writeConfigurationalHeatCapacity(roundedTemperature, avgEnergy, configurationalHeatCapacity);
+				}
     			if (!s.staticTemp){
 					t -= delT; //Decrease temperature by decrement factor
 				}
     			if (t < 0) {
     				t = 0; //Prevents temperature from becoming negative, which causes issues
     			}
-
     			s.writeMovie(x, x+1);
     		}
     		saveT *= toothScale;
