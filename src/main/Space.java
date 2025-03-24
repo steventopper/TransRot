@@ -4,15 +4,12 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.net.URLDecoder;
 import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Scanner;
+import java.util.*;
+
 import org.apache.commons.math3.random.MersenneTwister;
 import org.apache.commons.math3.util.Pair;
 import org.apache.commons.math3.util.Precision;
 import java.time.LocalDateTime;
-import java.util.stream.IntStream;
 
 public class Space {
     //All set in config.txt
@@ -36,7 +33,6 @@ public class Space {
     boolean writeEnergiesEnabled;
     boolean writeConfHeatCapacitiesEnabled;
     int eqConfigs;
-    boolean isPairwise;
     boolean writeAcceptanceRatios;
 
     private String dir; //Directory of .xyz files to be saved in, created at runtime
@@ -49,7 +45,7 @@ public class Space {
     private final ArrayList<Molecule> space;
     private final ArrayList<Molecule> moveableMolecules;
     private final ArrayList<Molecule> dbase;
-    private final HashMap<Pair<String, String>, double[]> pairwiseDbase;
+    private final HashMap<Pair<UUID, UUID>, double[]> pairwiseDbase;
     private static final MersenneTwister r = new MersenneTwister(); //Used instead of Java.Random for greater accuracy in randomization
     static final double BOLTZMANN_CONSTANT = 0.0019872;
     public Space(double s){
@@ -90,7 +86,7 @@ public class Space {
                 double x = (r.nextDouble() * size) - (size / 2);
                 double y = (r.nextDouble() * size) - (size / 2);
                 double z = (r.nextDouble() * size) - (size / 2);
-                if (space.size() == 0){ //If placing first molecule, no reason to do comparisons, just place the molecule
+                if (space.isEmpty()){ //If placing first molecule, no reason to do comparisons, just place the molecule
                     m.put(x, y, z);
                     space.add(m);
                     moveableMolecules.add(m);
@@ -246,8 +242,6 @@ public class Space {
                 currLine++;
                 eqConfigs = Integer.parseInt(scanner.nextLine().split(" " + " +")[1]);
                 currLine++;
-                isPairwise = Boolean.parseBoolean(scanner.nextLine().split(" " + " +")[1]);
-                currLine++;
                 writeAcceptanceRatios = Boolean.parseBoolean(scanner.nextLine().split(" " + " +")[1]);
                 currLine++;
                 //Skip 3 lines for comments
@@ -311,7 +305,7 @@ public class Space {
                         currLine++;
                         //If line is preceded by space, everything breaks since we get atomVals[0] == "". So, if that's true, start from 1.
                         int c = 0;
-                        if (atomVals[0].equals("")) {
+                        if (atomVals[0].isEmpty()) {
                             c = 1;
                         }
                         atomSyms[y] = atomVals[c];
@@ -374,65 +368,23 @@ public class Space {
             System.exit(0);
         }
     }
-    public void readPairwise(){
-        if (!isPairwise){
-            return;
-        }
-        try {
-            String pathName = Main.class.getProtectionDomain().getCodeSource().getLocation().getPath();
-            pathName = URLDecoder.decode(pathName, "utf-8");
-            pathName = "/" + pathName.substring(1, pathName.lastIndexOf("/")) + "/param_overrides.txt";
-            Scanner scanner = new Scanner(new File(pathName));
-            int currLine = 0; //Tracks current line for error printing
-            while (scanner.hasNextLine()){
-                try {
-                    String[] line = scanner.nextLine().split(" " + " +");
-                    currLine++;
-                    if (line.length != 6) {
-                        throw new Exception();
-                    }
-                    Pair<String, String> key1 = new Pair<>(line[0], line[1]);
-                    Pair<String, String> key2 = new Pair<>(line[1], line[0]);
-                    double[] value = {Double.parseDouble(line[2]), Double.parseDouble(line[3]), Double.parseDouble(line[4]), Double.parseDouble(line[5])};
-                    pairwiseDbase.put(key1, value);
-                    pairwiseDbase.put(key2, value);
-                }
-                catch (Exception exc){
-                    System.out.println("Error on line " + currLine + " in param_overrides.txt: File incorrectly formatted.");
-                    System.exit(0);
-                }
-            }
-        }
-        catch (Exception exc){
-            System.out.println("Error: File param_overrides.txt not found.");
-            System.exit(0);
-        }
-    }
+
     //Set up pair
     public void setupPairVals(){
-        if (isPairwise){
-            //Read pair vals from param_overrides.txt
-            readPairwise();
-            return;
-        }
+
         //Compile unique atoms from molecules in dbase
-        ArrayList<Atom> uniqueAtoms = new ArrayList<>();
-        for (Molecule molecule : dbase){
-            for (Atom atom : molecule.atoms){
-                if (!uniqueAtoms.contains(atom)){
-                    uniqueAtoms.add(atom);
-                }
-            }
+        ArrayList<Atom> allAtoms = new ArrayList<>();
+        for (Molecule molecule : dbase) {
+            allAtoms.addAll(molecule.atoms);
         }
-        //Determine pairwise params and put into pairwiseDbase
-        for (Atom atom1 : uniqueAtoms){
-            for (Atom atom2 : uniqueAtoms){
+        for (Atom atom1 : allAtoms) {
+            for (Atom atom2 : allAtoms) {
                 double A = Math.sqrt(atom1.a * atom2.a);
                 double B = (atom1.b + atom2.b) / 2;
                 double C = Math.sqrt(atom1.c * atom2.c);
                 double D = Math.sqrt(atom1.d * atom2.d);
-                Pair<String, String> key1 = new Pair<>(atom1.symbol, atom2.symbol);
-                Pair<String, String> key2 = new Pair<>(atom2.symbol, atom1.symbol);
+                Pair<UUID, UUID> key1 = new Pair<>(atom1.uuid, atom2.uuid);
+                Pair<UUID, UUID> key2 = new Pair<>(atom2.uuid, atom1.uuid);
                 double[] value = {A, B, C, D};
                 pairwiseDbase.put(key1, value);
                 pairwiseDbase.put(key2, value);
@@ -576,7 +528,7 @@ public class Space {
     	for (int x = 0; x < space.size(); x++) {
     		for (int y = 0; y < space.size(); y++) {
     			if (y > x) {
-    				totEnergy += space.get(x).calcEnergy(space.get(y), isPairwise, pairwiseDbase);
+    				totEnergy += space.get(x).calcEnergy(space.get(y), pairwiseDbase);
     			}
     		}
     	}
@@ -595,8 +547,8 @@ public class Space {
         double eEnd = 0;
         for (Molecule n : space) { //Calculate energy based on both current position and temporary position
             if (m != n) {
-                eStart += m.calcEnergy(n, isPairwise, pairwiseDbase);
-                eEnd += m.calcTempEnergy(n, isPairwise, pairwiseDbase);
+                eStart += m.calcEnergy(n, pairwiseDbase);
+                eEnd += m.calcTempEnergy(n, pairwiseDbase);
             }
         }
         if (eEnd - eStart > 0) { //If energy increases, certain chance to accept move based on boltzmann constant and temperature
@@ -638,12 +590,12 @@ public class Space {
     	double eEnd = 0;
 		for (Molecule n : space) {
 			if (m != n) {
-				eStart += m.calcEnergy(n, isPairwise, pairwiseDbase);
-				eEnd += m.calcTempEnergy(n, isPairwise, pairwiseDbase);
+				eStart += m.calcEnergy(n, pairwiseDbase);
+				eEnd += m.calcTempEnergy(n, pairwiseDbase);
 			}
 		}
 		//double delEnergy = eEnd - eStart;
-		if (eEnd - eStart > 0) { //If energy incrases, certain chance to accept move based on boltzmann constant and temperature
+		if (eEnd - eStart > 0) { //If energy increases, certain chance to accept move based on boltzmann constant and temperature
 			double rand = r.nextDouble();
 			if (temp == 0) { //If temperature is zero, formula fails but only decreases in energy should be accepted, so reject manually
 				m.resetTemps();
@@ -771,105 +723,6 @@ public class Space {
         catch (Exception exc){
             System.out.println("Error: Failed to write to " + dir + "/min_energy_structure" + minEnergyToothNum + ".xyz");
             System.exit(0);
-        }
-    }
-    public void writeInteractionParameters(){
-        String writePath = dir + "/interaction_params.txt";
-        StringBuilder output = new StringBuilder();
-        ArrayList<Atom> atomsList = new ArrayList<>();
-
-        //Write all molecule formulas
-        output.append("Molecular Formulas:\n");
-        for (Molecule mol : dbase){
-            output.append(mol.name).append("\n");
-            atomsList.addAll(mol.atoms);
-        }
-
-        //Declare units used
-        output.append("\nUnits:\nDistances in Angstroms, charges in atomic charge units, energies in Kcal/mol\n");
-
-        //Declare Kappa value
-        output.append("\nKappa = ").append(Atom.K_VALUE).append("\n");
-
-        //List all atomic charges
-        output.append("\nAtomic Charges:\n").append("Symbol  Charge\n");
-        int[] maxLen = {0, 0, 0};
-        for (Atom atom : atomsList.stream().distinct().toArray(Atom[]::new)){
-            output.append(atom.symbol);
-            IntStream.range(0, 7 - atom.symbol.length() + (atom.q >= 0 ? 1 : 0)).forEach(x -> output.append(" "));
-            output.append(atom.q).append("\n");
-            maxLen[0] = Math.max(maxLen[0], Double.toString(atom.a).length());
-            maxLen[1] = Math.max(maxLen[1], Double.toString(atom.b).length());
-            maxLen[2] = Math.max(maxLen[2], Double.toString(atom.c).length());
-        }
-
-        //List all pair potentials
-        output.append("\nPair Potentials:\nParticles   A           B           C           D");
-        HashMap<String, ArrayList<String>> alreadyAdded = new HashMap<>();
-        for (Map.Entry<Pair<String, String>, double[]> entry : pairwiseDbase.entrySet()) {
-            Pair<String, String> key = entry.getKey();
-            if (!alreadyAdded.containsKey(key.getFirst())) {
-                alreadyAdded.put(key.getFirst(), new ArrayList<>());
-            }
-            if (alreadyAdded.getOrDefault(key.getFirst(), new ArrayList<>()).contains(key.getSecond())
-                    || alreadyAdded.getOrDefault(key.getSecond(), new ArrayList<>()).contains(key.getFirst())) continue;
-            alreadyAdded.get(key.getFirst()).add(key.getSecond());
-            double[] value = entry.getValue();
-            output.append("\n").append(key.getFirst());
-            IntStream.range(0, 4 - key.getFirst().length()).forEach(x -> output.append(" "));
-            output.append(key.getSecond());
-            IntStream.range(0, 4 - key.getSecond().length()).forEach(x -> output.append(" "));
-            StringBuilder a = new StringBuilder();
-            a.append(value[0]);
-            while (a.length() < 8){
-                a.append(0);
-            }
-            while (a.length() > 8){
-                char pop = a.charAt(a.length() - 1);
-                a.deleteCharAt(a.length() - 1);
-                if (pop == '.') break;
-            }
-            output.append("    ").append(a);
-            StringBuilder b = new StringBuilder();
-            b.append(value[1]);
-            while (b.length() < 8){
-                b.append(0);
-            }
-            while (b.length() > 8){
-                char pop = b.charAt(b.length() - 1);
-                b.deleteCharAt(b.length() - 1);
-                if (pop == '.') break;
-            }
-            output.append("    ").append(b);
-            StringBuilder c = new StringBuilder();
-            c.append(value[2]);
-            while (c.length() < 11){
-                c.append(0);
-            }
-            while (c.length() > 11){
-                char pop = c.charAt(c.length() - 1);
-                c.deleteCharAt(c.length() - 1);
-                if (pop == '.') break;
-            }
-            output.append("    ").append(c);
-            StringBuilder d = new StringBuilder();
-            d.append(value[3]);
-            while (d.length() < 11){
-                d.append(0);
-            }
-            while (d.length() > 11){
-                char pop = d.charAt(d.length() - 1);
-                d.deleteCharAt(d.length() - 1);
-                if (pop == '.') break;
-            }
-            output.append("    ").append(d);
-        }
-        try {
-            FileWriter writer = new FileWriter(writePath, false);
-            writer.write(output.toString());
-            writer.close();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
         }
     }
 

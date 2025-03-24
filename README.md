@@ -1,4 +1,4 @@
-# TransRot Version 1.7.0
+# TransRot Version 1.7.1
 
 Steven L. Topper and Robert Q. Topper\
 Albert Nerken School of Engineering\
@@ -64,7 +64,7 @@ All run parameters are set in config.txt. **VERY IMPORTANT:** Each parameter mus
     <li>Moves per Point: Number of attempted translations or rotations per temperature segment.</li>
     <li>Points per Tooth: Number of temperature segments within the first tooth. For example, if Points per Tooth is set to 4, the cluster will do [Moves per Point] translations or rotations at the maximum temperature, then the temperature will be reduced by 1/4 of the maximum temperature; this will repeat until the temperature is 0K at the end of the tooth.</li>
     <li>Points Added per Tooth: Each tooth beyond the first will have this many temperature segments added to the number used in the preceding tooth. If set to 0, every tooth will have the same number of temperature segments as was used within the first tooth.</li>
-    <li>Number of Teeth: Number of sawteeth, or the number of times the cluster will be reheated to some fraction of the initial maximum temperature.</li>
+    <li>Number of Teeth: Number of sawtooths, or the number of times the cluster will be reheated to some fraction of the initial maximum temperature.</li>
     <li>Temperature Decrease per Tooth: After each sawtooth, the temperature is set to the previous maximum temperature multiplied by this factor (must be less than 1).</li>
     <li>Max Translation Distance (Angstroms): Maximum distance that a particle can be translated in one move.</li>
     <li>Magwalk Translation Multiplication Factor: If magwalking occurs, Max Translation Distance will be multiplied by this factor each time a magnified translation is attempted.</li>
@@ -74,16 +74,12 @@ All run parameters are set in config.txt. **VERY IMPORTANT:** Each parameter mus
     <li>Length of Cubic Space: Size of the original cube inside of which particles will be randomly placed to obtain the initial cluster structure. During annealing, particles will be confined to a box with side lengths of 1.5x this value.</li>
     <li>Max Failures During Propagation: While randomly placing particles inside the initial space, if a particle cannot be placed within the space within this number of attempts, the side length of the cubic space will be increased by 10% and the process will repeat until all particles are placed.</li>
     <li>Use Input.xyz (true/false): Disables generation of a random cluster, instead using Input.xyz as the starting cluster. Input.xyz uses the standard .xyz file format, with the comment line denotating the number of atoms per particle, as read from top to bottom, separated by spaces. If desired, a particle can be marked as "frozen" (i.e. will not move or rotate during annealing) by following the number of atoms for that particle with the letter F.
-        </br>Example: For an Input.xyz file containing 3 ammonium ions, followed by 4 chloride ions, followed by 1 "frozen" ammonium ion, the comment line would be: <pre> 5 5 5 1 1 1 1 5F </pre> <b>Important:</b> While this option is enabled, Length of Cubic Space will not automatically increase and must be manually set to a proper value.</li>
+        <br>Example: For an Input.xyz file containing 3 ammonium ions, followed by 4 chloride ions, followed by 1 "frozen" ammonium ion, the comment line would be: <pre> 5 5 5 1 1 1 1 5F </pre> <b>Important:</b> While this option is enabled, Length of Cubic Space will not automatically increase and must be manually set to a proper value.</li>
     <li>0K Finale (true/false): Enables the final tooth to repeat itself at a static temperature of 0K. The output file for this tooth replaces the output file for the final tooth, and its movie file will be appended to the final output movie file.</li>
     <li>Static Temperature (true/false): This option is designed to help with determining other values such as Max Translation Distance. When enabled, Number of Teeth and Points per Tooth will be considered as set to 1. During this tooth, the temperature will remain at the starting temperature.</li>
     <li>Write Energies When Static Temperature (true/false): When Static Temperature is enabled, enabling this option saves the energy of the system to energies.txt after each attempted move. Enabling this option may cause TransRot to run significantly slower.</li>
-    <li>Write Configurational Heat Capacities (true/false): Enabling this option adds an additional file to the output, 'configurational_heat_capacities.txt'. For each distinct temperature, the file will contain a line with the temperature, the average energy at that temperature, and the configurational heat capacity (C) at that temperature, with C = (< V<sup>2</sup> > - < V ><sup>2</sup>) / (k<sub>B</sub>T<sup>2</sup>).</li>
+    <li>Write Configurational Heat Capacities (true/false): Enabling this option adds a file to the output, 'configurational_heat_capacities.txt'. For each distinct temperature, the file will contain a line with the temperature, the average energy at that temperature, and the configurational heat capacity (C) at that temperature, with C = (< V<sup>2</sup> > - < V ><sup>2</sup>) / (k<sub>B</sub>T<sup>2</sup>).</li>
     <li>Number of Equilibration Configurations: When Static Temperature and Write Configurational Heat Capacities are both enabled, the first N energies will not be considered in the configurational heat capacity, where N is the value set for Number of Equilibration Configurations.</li>
-    <li>Override Interaction Parameters (true/false): This option allows users to define custom interactions between various atoms. When enabled, combinations of Ai, Bi, Ci, and Di will be read from param_overrides.txt instead of being generated from the values in dbase.txt. These values must be set individually for each unique combination of atoms in the cluster.
-</br>When defining interactions in param_overrides.txt, all numbers or symbols on the same row must be separated by **at least 2 spaces**. The format for appending an interaction is shown below:
-</br> <pre>First Atomic Symbol &nbsp; Second Atomic Symbol &nbsp; Ai &nbsp; Bi &nbsp; Ci &nbsp; Di </pre>
-</br>For more information regarding these parameters, see "How to Add New Molecules to the Database".</li>
     <li>Write Acceptance Ratios (true/false): This option is designed to help with determining other values such as Max Translation Distance. When enabled, the ratio of accepted moves for each temperature point will be written to "acceptance_ratios.txt", along with the corresponding temperature in degrees Kelvin.</li>
 </ul>
     
@@ -102,7 +98,7 @@ Finally, the pairwise interaction parameters are defined for interactions betwee
 
 The pairwise interaction potential assumed by TransRot uses the formula
 
-<img src=https://user-images.githubusercontent.com/6625247/132400608-07cada97-4d94-4674-81e2-aaafee35f550.PNG width=50% height=50%>
+<img src=https://user-images.githubusercontent.com/6625247/132400608-07cada97-4d94-4674-81e2-aaafee35f550.PNG width=50% height=50% alt="">
 
 The double sums above are meant to imply that all of the interactions are summed up between the atoms (i and j) associated with the various particles within any given system. The base units employed for these parameters are (kcal/mole, Angstroms, atomic charge units). In the database, the user specifies the parameters (Aii,Bii,Cii,Dii,Qi,massi) for each atom, with the following units: 
 
@@ -151,7 +147,7 @@ TransRot is by default licensed under All Rights Reserved. However, we allow usa
     <li>All derivative works of this program must also be licensed under the TransRot License.</li>
     <li>Usage of this program for general use is allowed; however, both this program and the following paper must be cited in any use:
     <br>R.Q. Topper, S.L. Topper. S. Lee, TransRot: A portable software package for simulated annealing Monte Carlo geometry optimization of atomic and molecular clusters, in ACS Symposium Series Vol. 1428, C.A. Parish and T.A. Hopkins, Eds., American Chemical Society, Chapter 2, pp. 19-38 (2022). https://pubs.acs.org/doi/abs/10.1021/bk-2022-1428.ch002</li>
-    <li> The following papers may optionally be cited as applicable:</li>
+    <li> The following papers may optionally be cited as applicable:
     <ol>
         <li>F.M. Torres, E. Agichtein, L. Grinberg, G. Yu, R.Q. Topper, A note on the application of the “Boltzmann simplex”-simulated annealing algorithm to global optimizations of argon and water clusters, Journal of Molecular Structure (THEOCHEM) 419, 85 (1997). DOI: https://doi.org/S0166-1280(97)00195-4 </li>
         <li>R.Q. Topper, D.L. Freeman, D. Bergin, K. LaMarche, Computational techniques and strategies for Monte Carlo thermodynamic calculations with applications to nanoclusters,  in Reviews in Computational Chemistry, Vol. 19, Ch.1, pp. 1-41, K.B. Lipkowitz, R. Larter and T.R. Cundari, Eds., Wiley-VCH/John Wiley and Sons, New York (2003). [ISBN 0-471-23585-7.](https://onlinelibrary.wiley.com/doi/abs/10.1002/0471466638.ch1)</li>
