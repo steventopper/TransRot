@@ -76,10 +76,6 @@ public class Atom {
         double D;
         Pair<UUID, UUID> key = new Pair<>(this.uuid, atom.uuid);
         double[] value = pairwiseDbase.get(key);
-        if (value == null){
-            System.out.println("Error: pairwise.txt does not contain a pairing for " + this.symbol + " ID " + this.uuid.toString() + " and " + atom.symbol + " ID " + atom.uuid.toString() + ".");
-            System.exit(0);
-        }
         A = value[0];
         B = value[1];
         C = value[2];
@@ -95,10 +91,6 @@ public class Atom {
         double D;
         Pair<UUID, UUID> key = new Pair<>(this.uuid, atom.uuid);
         double[] value = pairwiseDbase.get(key);
-        if (value == null){
-            System.out.println("Error: pairwise.txt does not contain a pairing for " + this.symbol + " and " + atom.symbol + ".");
-            System.exit(0);
-        }
         A = value[0];
         B = value[1];
         C = value[2];
