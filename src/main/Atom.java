@@ -2,14 +2,17 @@ package main;
 
 import org.apache.commons.math3.util.Pair;
 import java.util.HashMap;
+import java.util.UUID;
 
 public class Atom {
+    public UUID uuid;
+
 	public static final double K_VALUE = 332.0637133;
     String symbol;
     double x;
     double y;
     double z;
-    //Def (default) variables used to save relative position to center of molecule; ensures that atoms are placed properly compared to center of molecule when propogating space
+    //Def (default) variables used to save relative position to center of molecule; ensures that atoms are placed properly compared to center of molecule when propagating space
     double defX;
     double defY;
     double defZ;
@@ -27,7 +30,9 @@ public class Atom {
     double kTimesQ;
 
     double mass;
+
     public Atom(String s, double x, double y, double z, double A, double B, double C, double D, double Q, double mass){
+        this.uuid = UUID.randomUUID();
         symbol = s;
         this.x = x;
         this.y = y;
@@ -46,6 +51,7 @@ public class Atom {
     }
     //For copying molecules from database List object, called by Molecule.Molecule(Molecule m)
     public Atom (Atom atom){
+        this.uuid = atom.uuid;
         symbol = atom.symbol;
         x = atom.x;
         y = atom.y;
@@ -63,39 +69,31 @@ public class Atom {
         kTimesQ = K_VALUE * q;
     }
     //Calculates energy based on atom full position
-    public double calcEnergy(Atom atom, boolean isPairwise, HashMap<Pair<String, String>, double[]> pairwiseDbase) { //Calculates energy compared to rest of system, instead of total energy of system
+    public double calcEnergy(Atom atom, HashMap<Pair<UUID, UUID>, double[]> pairwiseDbase) { //Calculates energy compared to rest of system, instead of total energy of system
         double A;
         double B;
         double C;
         double D;
-        if (isPairwise){
-            Pair<String, String> key = new Pair<>(this.symbol, atom.symbol);
-            double[] value = pairwiseDbase.get(key);
-            if (value == null){
-                System.out.println("Error: pairwise.txt does not contain a pairing for " + this.symbol + " and " + atom.symbol + ".");
-                System.exit(0);
-            }
-            A = value[0];
-            B = value[1];
-            C = value[2];
-            D = value[3];
+        Pair<UUID, UUID> key = new Pair<>(this.uuid, atom.uuid);
+        double[] value = pairwiseDbase.get(key);
+        if (value == null){
+            System.out.println("Error: pairwise.txt does not contain a pairing for " + this.symbol + " ID " + this.uuid.toString() + " and " + atom.symbol + " ID " + atom.uuid.toString() + ".");
+            System.exit(0);
         }
-        else {
-            A = Math.sqrt(this.a * atom.a);
-            B = (this.b + atom.b) / 2;
-            C = Math.sqrt(this.c * atom.c);
-            D = Math.sqrt(this.d * atom.d);
-        }
+        A = value[0];
+        B = value[1];
+        C = value[2];
+        D = value[3];
     	double r = Math.sqrt(Math.pow(atom.x - x, 2) + Math.pow(atom.y - y, 2) + Math.pow(atom.z - z, 2)); //Distance between atoms
     	return (kTimesQ * atom.q / r) + A * Math.exp(-1 * B * r) - (C / Math.pow(r,  6)) + (D / Math.pow(r,  12));
     }
    // Calculates energy based on atom temp position
-    public double calcTempEnergy(Atom atom, boolean isPairwise, HashMap<Pair<String, String>, double[]> pairwiseDbase) { //Calculates energy compared to rest of system, instead of total energy of system
+    public double calcTempEnergy(Atom atom, HashMap<Pair<UUID, UUID>, double[]> pairwiseDbase) { //Calculates energy compared to rest of system, instead of total energy of system
         double A;
         double B;
         double C;
         double D;
-        Pair<String, String> key = new Pair<>(this.symbol, atom.symbol);
+        Pair<UUID, UUID> key = new Pair<>(this.uuid, atom.uuid);
         double[] value = pairwiseDbase.get(key);
         if (value == null){
             System.out.println("Error: pairwise.txt does not contain a pairing for " + this.symbol + " and " + atom.symbol + ".");
