@@ -253,8 +253,8 @@ public class Space {
                 while (scanner.hasNextLine()) {
                     String line = scanner.nextLine();
                     currLine++;
-                    String name = line.split(" ")[0];
-                    int num = Integer.parseInt(line.split(" ")[1]);
+                    String name = line.split(" {2,}")[0];
+                    int num = Integer.parseInt(line.split(" {2,}")[1]);
                     for (int x = 0; x < num; x++) {
                         if (!add(name)) {
                             System.out.println("Error on line " + currLine + " in config.txt: Unable to find molecule '" + name + "' in dbase.txt.");

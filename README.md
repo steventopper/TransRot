@@ -83,7 +83,7 @@ All run parameters are set in config.txt. **VERY IMPORTANT:** Each parameter mus
     <li>Write Acceptance Ratios (true/false): This option is designed to help with determining other values such as Max Translation Distance. When enabled, the ratio of accepted moves for each temperature point will be written to "acceptance_ratios.txt", along with the corresponding temperature in degrees Kelvin.</li>
 </ul>
     
-The particles to be used in the simulation are set at the bottom of config.txt. Each line includes the molecular formula of a particle followed by the number of that particle to be included, separated by **one space**. The default config.txt contains setup for an ammonium chloride cluster with 4 ammonium ions and 4 chloride ions, as follows:\
+The particles to be used in the simulation are set at the bottom of config.txt. Each line includes the molecular formula of a particle followed by the number of that particle to be included, separated by **two or more spaces**. The default config.txt contains setup for an ammonium chloride cluster with 4 ammonium ions and 4 chloride ions, as follows:\
 NH4+ 4\
 Cl- 4 
 
