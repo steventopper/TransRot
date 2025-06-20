@@ -3,20 +3,30 @@ import org.apache.commons.math3.random.MersenneTwister;
 import org.apache.commons.math3.util.Pair;
 import org.apache.commons.math3.util.Precision;
 
+import java.io.File;
+import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Main {
     private static final MersenneTwister r = new MersenneTwister();
-    public static void main(String[] args) {
+    public static void main(String[] args) throws UnsupportedEncodingException {
         Space s = new Space(10);
         long time1 = System.nanoTime();
-    	s.readDB();
-    	s.readCFG();
+        Map<String, String> parsedArgs = getArgs(args);
+		s.readDB(parsedArgs.get("dbase"));
+		s.readCFG(parsedArgs.get("config"));
 		s.setupPairVals();
-    	if (s.useInput) {
-    		//Read molecules from Input.xyz, do not propagate
-			s.readInput();
+		if (s.useInput) {
+			//Read molecules from Input.xyz, do not propagate
+			s.readInput(parsedArgs.get("input"));
+		} else if (parsedArgs.get("inputIncluded").equals("yes")) {
+			System.err.println("Error: You cannot provide a parameter for --input if \"Use Input.xyz\" is not selected in your config.");
+			System.exit(1);
 		}
     	else {
 			//If molecules can't be placed in space of given size within 20 tries, increase size by 10% and retry
@@ -24,7 +34,8 @@ public class Main {
 				s.size = s.size * 1.1;
 			}
 		}
-        s.makeDirectory();
+        s.makeDirectory(parsedArgs);
+    	s.log("Writing output to: " + s.getDir());
         long time2 = System.nanoTime();
         String stamp = timestamp(time1, time2);
         s.write(0);
@@ -49,6 +60,75 @@ public class Main {
         stamp = timestamp(time1, time2);
 		s.log("Annealing done in " + stamp + ".");
     }
+
+    public static Map<String, String> getArgs(String[] args) throws UnsupportedEncodingException {
+		//Construct path to file, rather complicated but has to work with .jar or project files for testing
+		String pathDir = Main.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+		pathDir = URLDecoder.decode(pathDir, "utf-8");
+		pathDir = "/" + pathDir.substring(1, pathDir.lastIndexOf("/"));
+
+		Map<String, String> parsed = new HashMap<>();
+
+		parsed.put("output", pathDir);
+		parsed.put("config", pathDir + "/config.txt");
+		parsed.put("dbase", pathDir + "/dbase.txt");
+		parsed.put("input", pathDir + "/Input.xyz");
+		parsed.put("inputIncluded", "no");
+
+		for (int i = 0, argsLength = args.length; i < argsLength; i++) {
+			String arg = args[i];
+			String argName = null;
+			String fileType = null;
+			try {
+				switch (arg) {
+					case "-i":
+					case "--input":
+						argName = "input";
+						fileType = ".xyz";
+						parsed.put("inputIncluded", "yes");
+					case "-d":
+					case "--dbase":
+						if (argName == null) argName = "dbase";
+						if (fileType == null) fileType = ".txt";
+					case "-c":
+					case "--config":
+						if (argName == null) argName = "config";
+						if (fileType == null) fileType = ".txt";
+						if (i == argsLength - 1) throw new Exception(String.format("Error: Expected file path for \"%s\" parameter", argName));
+						i++;
+						String value = args[i];
+						File file = new File(value);
+						if (!file.exists()) throw new Exception(String.format("Error: File not found: %s", file.getCanonicalPath()));
+						if (!file.canRead()) throw new Exception(String.format("Error: Cannot read file %s", file.getCanonicalPath()));
+						if (!file.getPath().endsWith(fileType)) throw new Exception(String.format("Error: Bad filetype for \"%s\" parameter; expected %s file", argName, fileType));
+						parsed.put(argName, value);
+						break;
+					case "-o":
+					case "--output":
+						if (i == argsLength - 1) throw new Exception("Error: Expected output directory path for \"output\" parameter");
+						i++;
+						value = args[i];
+						file = new File(value);
+						if (!file.exists()) throw new Exception(String.format("Error: Directory not found: %s", file.getCanonicalPath()));
+						if (!file.isDirectory()) throw new Exception(String.format("Error: %s is not a directory", file.getCanonicalPath()));
+						if (!file.canWrite()) throw new Exception(String.format("Error: Cannot write to directory %s", file.getCanonicalPath()));
+						parsed.put("output", value);
+						break;
+					default:
+						if (arg.startsWith("-")) {
+							throw new Exception(String.format("Error: Unknown flag: %s", arg));
+						} else {
+							throw new Exception(String.format("Error: Unexpected argument: %s", arg));
+						}
+				}
+			} catch (Exception e) {
+				System.err.println(e.getMessage());
+				System.exit(1);
+			}
+		}
+
+		return parsed;
+	}
 
     public static void sawtoothAnneal(Space s, double maxTemp, double numMovesPerPoint, int ptsPerTooth, int ptsIncrement, int numTeeth, double toothScale, double maxD, double magwalkFactorTrans, double magwalkProbTrans, double maxRot, double magwalkProbRot, double startingEnergy) {
     	double t = maxTemp;
