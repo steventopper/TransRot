@@ -1,21 +1,19 @@
 package main;
-import java.io.*;
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.net.URLDecoder;
-import java.nio.file.Files;
-import java.security.Security;
-import java.sql.Array;
-import java.util.*;
-
 import org.apache.commons.math3.random.MersenneTwister;
 import org.apache.commons.math3.util.Pair;
 import org.apache.commons.math3.util.Precision;
+
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.nio.file.Files;
 import java.time.LocalDateTime;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class Space {
     //All set in config.txt
