@@ -137,20 +137,12 @@ The double sums above are meant to imply that all of the interactions are summed
 | Parameter | Database Unit |
 | --- | --- |
 | A<sub>ii</sub> | kcal/mol |
-| B<sub>ii</sub> | (Angstroms)^{-1} |
-| C<sub>ij</sub> | kcal / (Angstroms^6)(mole) |
-| D<sub>ij</sub> | kcal / (Angstroms^12)(mole) |
+| B<sub>ii</sub> | Angstroms<sup>-1</sup> |
+| C<sub>ij</sub> | kcal / (Angstroms<sup>6</sup>)(mole) |
+| D<sub>ij</sub> | kcal / (Angstroms<sup>12</sup>)(mole) |
 | Q<sub>i</sub> | atomic units of charge (here the charge of the electron = 1 exactly) |
-| Mass<sub>i</sub> | amu (the mass of carbon-12 is 12.000 am |
+| Mass<sub>i</sub> | amu (the mass of carbon<sub>12</sub> is 12.000 amu |
 
-[comment]: <> "Old code if desired"
-[comment]: <> "Parameter  &nbsp;&nbsp;&nbsp;&nbsp;  Database Units \ "
-[comment]: <> "Aii  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;  kcal/mole \ "
-[comment]: <> "Bii  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;  &#40;Angstroms&#41;^{-1} \ "
-[comment]: <> "Cij  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;  kcal / &#40;Angstroms^6&#41;&#40;mole&#41; \ "
-[comment]: <> "Dij  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;  kcal / &#40;Angstroms^12&#41;&#40;mole&#41; \ "
-[comment]: <> "qi  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;  atomic units of charge &#40;here the charge of the electron = 1 exactly&#41; \ "
-[comment]: <> "Massi  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;  amu &#40;the mass of carbon-12 is 12.000 amu&#41; "
 
 Interactions between unlike atoms (i,j) on different particles are obtained within the code using arithmetic averages for the B parameters: \
 <img src=https://user-images.githubusercontent.com/6625247/132400815-5e64203d-a145-48f1-b484-a354d82b8bf0.PNG width=18% height=18%> \
@@ -165,13 +157,6 @@ Atomic Symbol     x      y      z      A      B      C      D      Q      mass
 Atomic Symbol     x      y      z      A      B      C      D      Q      mass
 ...
 ```
-
-[comment]: <> "Old code if desired"
-[comment]: <> "Number of Atoms In Particle \ "
-[comment]: <> "Molecular Formula Molecular Radius (for random placement purposes only) \ "
-[comment]: <> "Atomic Symbol &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; x &nbsp; &nbsp; &nbsp; y &nbsp; &nbsp; &nbsp; z &nbsp; &nbsp; &nbsp; A &nbsp; &nbsp; &nbsp; B &nbsp; &nbsp; &nbsp; C &nbsp; &nbsp; &nbsp; D &nbsp; &nbsp; &nbsp; Q &nbsp; &nbsp; &nbsp; mass \ "
-[comment]: <> "Atomic Symbol &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; x &nbsp; &nbsp; &nbsp; y &nbsp; &nbsp; &nbsp; z &nbsp; &nbsp; &nbsp; A &nbsp; &nbsp; &nbsp; B &nbsp; &nbsp; &nbsp; C &nbsp; &nbsp; &nbsp; D &nbsp; &nbsp; &nbsp; Q &nbsp; &nbsp; &nbsp; mass \ "
-[comment]: <> "... \ "
 
 Continued for each atom in the particle
 
