@@ -8,57 +8,63 @@ import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
 public class Main {
     private static final MersenneTwister r = new MersenneTwister();
     public static void main(String[] args) throws UnsupportedEncodingException {
-        Space s = new Space(10);
-        long time1 = System.nanoTime();
-        Map<String, String> parsedArgs = getArgs(args);
-		s.readDB(parsedArgs.get("dbase"));
-		s.readCFG(parsedArgs.get("config"));
-		s.setupPairVals();
-		if (s.useInput) {
-			//Read molecules from Input.xyz, do not propagate
-			s.readInput(parsedArgs.get("input"));
-		} else if (parsedArgs.get("inputIncluded").equals("yes")) {
-			System.err.println("Error: You cannot provide a parameter for --input if \"Use Input.xyz\" is not selected in your config.");
-			System.exit(1);
-		}
-    	else {
-			//If molecules can't be placed in space of given size within 20 tries, increase size by 10% and retry
-			while (!s.propagate()) {
-				s.size = s.size * 1.1;
+    	long procStart = System.nanoTime();
+		Space s = new Space(10);
+    	try {
+			long time1 = System.nanoTime();
+			Map<String, String> parsedArgs = getArgs(args);
+			s.readDB(parsedArgs.get("dbase"));
+			s.readCFG(parsedArgs.get("config"));
+			s.setupPairVals();
+			if (!s.useInput && parsedArgs.get("inputIncluded").equals("yes")) {
+				System.err.println("Error: You cannot provide a parameter for --input if \"Use Input.xyz\" is not selected in your config.");
+				System.exit(1);
 			}
-		}
-        s.makeDirectory(parsedArgs);
-    	s.log("Writing output to: " + s.getDir());
-        long time2 = System.nanoTime();
-        String stamp = timestamp(time1, time2);
-        s.write(0);
-        String initText = "Initialization ";
-        if (!s.useInput){
-        	initText += "and propagation ";
-		}
-        s.log(initText + "done in " + stamp);
-        s.log("Cluster movement constrained within cube with side length " + s.size * 1.5);
-        double startingEnergy = s.calcEnergy();
-		s.log("Starting Energy: " + startingEnergy);
-        time1 = System.nanoTime();
-        if (s.staticTemp){
-        	s.numTeeth = 1;
-			s.pointsPerTooth = 1;
-        	if (s.writeEnergiesEnabled) {
-				s.writeEnergy(startingEnergy);
+			s.makeDirectoryName(parsedArgs);
+			System.out.println("Writing output to: " + s.getDir());
+			if (s.useInput) {
+				//Read molecules from Input.xyz, do not propagate
+				s.readInput(parsedArgs.get("input"));
+			} else {
+				//If molecules can't be placed in space of given size within 20 tries, increase size by 10% and retry
+				while (!s.propagate()) {
+					s.size = s.size * 1.1;
+				}
 			}
+			s.makeDirectory(parsedArgs);
+			long time2 = System.nanoTime();
+			String stamp = timestamp(time1, time2);
+			s.write(0);
+			String initText = "Initialization ";
+			if (!s.useInput) {
+				initText += "and propagation ";
+			}
+			s.log(initText + "done in " + stamp);
+			s.log("Cluster movement constrained within cube with side length " + s.size * 1.5);
+			double startingEnergy = s.calcEnergy();
+			s.log("Starting Energy: " + startingEnergy);
+			time1 = System.nanoTime();
+			if (s.staticTemp) {
+				s.numTeeth = 1;
+				s.pointsPerTooth = 1;
+				if (s.writeEnergiesEnabled) {
+					s.writeEnergy(startingEnergy);
+				}
+			}
+			sawtoothAnneal(s, s.maxTemperature, s.movePerPoint, s.pointsPerTooth, s.pointIncrement, s.numTeeth, s.tempDecreasePerTooth, s.maxTransDist, s.magwalkFactorTrans, s.magwalkProbTrans, s.maxRotDegree, s.magwalkProbRot, startingEnergy);
+			time2 = System.nanoTime();
+			stamp = timestamp(time1, time2);
+			s.log("Annealing done in " + stamp + ".");
+		} finally {
+    		s.writeExecTime(procStart);
 		}
-        sawtoothAnneal(s, s.maxTemperature, s.movePerPoint, s.pointsPerTooth, s.pointIncrement, s.numTeeth, s.tempDecreasePerTooth, s.maxTransDist, s.magwalkFactorTrans, s.magwalkProbTrans, s.maxRotDegree, s.magwalkProbRot, startingEnergy);
-        time2 = System.nanoTime();
-        stamp = timestamp(time1, time2);
-		s.log("Annealing done in " + stamp + ".");
+
     }
 
     public static Map<String, String> getArgs(String[] args) throws UnsupportedEncodingException {

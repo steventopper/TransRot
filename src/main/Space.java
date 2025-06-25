@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.net.URLDecoder;
 import java.nio.file.Files;
+import java.security.Security;
 import java.util.*;
 
 import org.apache.commons.math3.random.MersenneTwister;
@@ -380,14 +381,21 @@ public class Space {
             }
         }
     }
-    //Creates new directory to place output files into
-    public void makeDirectory(Map<String, String> parsedArgs){
+    // creates directory path to be saved to later
+    public void makeDirectoryName(Map<String, String> parsedArgs)  {
         //Get current datetime and create directory name
         LocalDateTime time = LocalDateTime.now();
         String name = time.getYear() + "_" + time.getMonthValue() + "_" + time.getDayOfMonth() + "_" + time.getHour() + "_" + time.getMinute() + "_" + time.getSecond();
+        String dirName = parsedArgs.get("output") + "/" + name;
+        // throws an exception if directory cannot be created
+        SecurityManager security = System.getSecurityManager();
+        if (security != null) security.checkWrite(dirName);
+        dir = dirName;
+    }
+    //Creates new directory to place output files into
+    public void makeDirectory(Map<String, String> parsedArgs){
         //Get path of object
         try {
-            dir = parsedArgs.get("output") + "/" + name;
             File f = new File(dir);
             if (!f.mkdir()){
                 throw new Exception();
@@ -725,5 +733,19 @@ public class Space {
 
     public String getDir() {
         return dir;
+    }
+
+    public void writeExecTime(long procStart) {
+        long procEnd = System.nanoTime();
+        try {
+            String writePath = dir + "/elapsed_time.log";
+            FileWriter writer = new FileWriter(writePath, true);
+            writer.write((procEnd - procStart) + "");
+            writer.close();
+        }
+        catch (Exception exc){
+            System.err.println("Error: Failed to write to " + dir + "/elapsed_time.log");
+            System.exit(1);
+        }
     }
 }
