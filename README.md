@@ -110,7 +110,6 @@ All run parameters are set in config.txt. **VERY IMPORTANT:** Each parameter mus
 - Length of Cubic Space: Size of the original cube inside of which particles will be randomly placed to obtain the initial cluster structure. During annealing, particles will be confined to a box with side lengths of 1.5x this value.
 - Max Failures During Propagation: While randomly placing particles inside the initial space, if a particle cannot be placed within the space within this number of attempts, the side length of the cubic space will be increased by 10% and the process will repeat until all particles are placed.
 <a id="use-input"></a>
-<<<<<<< HEAD
 - Use Input.xyz (true/false): Disables generation of a random cluster, instead using Input.xyz as the starting cluster. Input.xyz uses the standard .xyz file format, with the comment line denotating the order and number of particles in order, as read from top to bottom, separated by '|'. If desired, a particle can be marked as "frozen" (i.e. will not move or rotate during annealing) by following the count for that particle with the letter F.
   
     **Example**: For an Input.xyz file containing 3 ammonium ions, followed by 4 chloride ions, followed by 1 "frozen" ammonium ion, the comment line would be: 
@@ -120,15 +119,6 @@ All run parameters are set in config.txt. **VERY IMPORTANT:** Each parameter mus
     **Important:** While this option is enabled, Length of Cubic Space will not automatically increase and must be manually set to a proper value.
 <a id="choose-params"></a>
 - Choose All Interaction Parameters (true/false): Overrides automatic calculation of pairwise interaction parameters between atoms in a simulation. By default, [A, B, C, and D](#how-to-add-new-molecules-to-the-database) for interactions between any two unlike atoms are calculated using averages; more specifically, B is calculated using a linear average while A, C, and D use a geometric average. The interaction parameters file uses a custom file format, specified in [its own section](#interaction-parameters).
-=======
-- Use Input.xyz (true/false): Disables generation of a random cluster, instead using Input.xyz as the starting cluster. Input.xyz uses the standard .xyz file format, with the comment line denotating the number of atoms per particle, as read from top to bottom, separated by spaces. If desired, a particle can be marked as "frozen" (i.e. will not move or rotate during annealing) by following the number of atoms for that particle with the letter F.
-  
-    **Example**: For an Input.xyz file containing 3 ammonium ions, followed by 4 chloride ions, followed by 1 "frozen" ammonium ion, the comment line would be: 
-    ```
-    5 5 5 1 1 1 1
-    ```
-    **Important:** While this option is enabled, Length of Cubic Space will not automatically increase and must be manually set to a proper value.
->>>>>>> 190f181 (update README.md)
 - 0K Finale (true/false): Enables the final tooth to repeat itself at a static temperature of 0K. The output file for this tooth replaces the output file for the final tooth, and its movie file will be appended to the final output movie file.
 - Static Temperature (true/false): This option is designed to help with determining other values such as Max Translation Distance. When enabled, Number of Teeth and Points per Tooth will be considered as set to 1. During this tooth, the temperature will remain at the starting temperature.
 - Write Energies When Static Temperature (true/false): When Static Temperature is enabled, enabling this option saves the energy of the system to energies.txt after each attempted move. Enabling this option may cause TransRot to run significantly slower.
@@ -198,12 +188,13 @@ The double sums above are meant to imply that all of the interactions are summed
 | Parameter | Database Unit |
 | --- | --- |
 | A<sub>ii</sub> | kcal/mol |
-| B<sub>ii</sub> | (Angstroms)^{-1} |
-| C<sub>ij</sub> | kcal / (Angstroms^6)(mole) |
-| D<sub>ij</sub> | kcal / (Angstroms^12)(mole) |
+| B<sub>ii</sub> | Angstroms<sup>-1</sup> |
+| C<sub>ij</sub> | kcal / (Angstroms<sup>6</sup>)(mole) |
+| D<sub>ij</sub> | kcal / (Angstroms<sup>12</sup>)(mole) |
 | Q<sub>i</sub> | atomic units of charge (here the charge of the electron = 1 exactly) |
-| Mass<sub>i</sub> | amu (the mass of carbon-12 is 12.000 am |
+| Mass<sub>i</sub> | amu (the mass of carbon<sub>12</sub> is 12.000 amu |
 
+<<<<<<< HEAD
 [comment]: <> "Old code if desired"
 [comment]: <> "Parameter  &nbsp;&nbsp;&nbsp;&nbsp;  Database Units \ "
 [comment]: <> "Aii  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;  kcal/mole \ "
@@ -213,6 +204,8 @@ The double sums above are meant to imply that all of the interactions are summed
 [comment]: <> "qi  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;  atomic units of charge &#40;here the charge of the electron = 1 exactly&#41; \ "
 [comment]: <> "Massi  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;  amu &#40;the mass of carbon-12 is 12.000 amu&#41; "
 >>>>>>> 190f181 (update README.md)
+=======
+>>>>>>> 999d842 (further fix README)
 
 Interactions between unlike atoms (i,j) on different particles are obtained within the code using arithmetic averages for the B parameters: \
 <img src=https://user-images.githubusercontent.com/6625247/132400815-5e64203d-a145-48f1-b484-a354d82b8bf0.PNG width=18% height=18%> \
@@ -229,6 +222,7 @@ Atomic Symbol     x      y      z      A      B      C      D      Q      mass
 ```
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 [comment]: <> "Old code if desired"
 [comment]: <> "Number of Atoms In Particle \ "
@@ -238,6 +232,8 @@ Atomic Symbol     x      y      z      A      B      C      D      Q      mass
 [comment]: <> "... \ "
 
 >>>>>>> 190f181 (update README.md)
+=======
+>>>>>>> 999d842 (further fix README)
 Continued for each atom in the particle
 
 For comparison, the parameters provided in the sample dbase file are appropriate for simulations of H2O clusters using the TIP3P interaction potential due to Jorgensen et al. (1) and are at the present time documented correctly on Wikipedia (2). In our testing, TransRot was used to successfully find the global minimum-energy structures of TIP3P and TIP4P water clusters (H2O)n with (n=2-8). (3)
