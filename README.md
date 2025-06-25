@@ -11,15 +11,10 @@ http://engfac.cooper.edu/topper
 
 TransRot is designed to allow the user to carry out simulated annealing Monte Carlo geometry optimizations of atomic and molecular clusters. It is written in Java and has been tested under Windows (10 and 11), Linux (Ubuntu), and MacOS (El Catalina, Monterey, Ventur, Sequoia). Under the MacOS, multiple instances run in parallel on multiple cores with high efficiency, which allows multiple parameter sets to be explored simultaneously. In short, our goal is to produce software that is numerically efficient, machine portable, and simple to set up and use. We hope this proves to be a useful software tool for computational chemists and physicists.
 
-<<<<<<< HEAD
 Although TransRot is a standalone tool run from the command line, it also works as a backend for Visual TransRot (VTR). One of us (ET) designed VTR so as to make production work on a personal workstation simple and easy to manage. Like TransRot, VTR is programmed in Java and will run on all major operating systems. Please note that earlier TransRot versions are not compatible with VTR. Please visit the Visual TransRot project at https://github.com/xaridar/VisualTransRot.  
 
 The code uses a combination of two specific methods designed to overcome quasi-ergodicity and asymptotic quench rate problems that are not available in other publicly available codes. The first method is designed to overcome the problem that a simple linear or exponential cooling scheme may quench into a local minimum and never find its way out to locate the global minimum. TransRot uses a multilinear “sawtooth” temperature adjustment schedule in the simulated annealing process which takes the system through a series of slow cooling and instantaneous heating cycles, decreasing the uppermost temperature used at the start of each new cooling cycle.(1) This process enhances the probability of finding the global minimum and, with appropriate annealing parameters, can also be used to explore higher-energy structures as well. The second method unique to TransRot is the probabilistic use of magnified translational and rotational stepsizes, a process we have called “magwalking.”(2-4) These magnifications prevent molecules from becoming locked into locally minimum-energy orientations prematurely as the system is cooled, giving it the opportunity to overcome local energy barriers as needful.
 
-=======
-The code uses a combination of two specific methods designed to overcome quasi-ergodicity and asymptotic quench rate problems that are not available in other publicly available codes. The first method is designed to overcome the problem that a simple linear or exponential cooling scheme may quench into a local minimum and never find its way out to locate the global minimum. TransRot uses a multilinear “sawtooth” temperature adjustment schedule in the simulated annealing process which takes the system through a series of slow cooling and instantaneous heating cycles, decreasing the uppermost temperature used at the start of each new cooling cycle.(1) This process enhances the probability of finding the global minimum and, with appropriate annealing parameters, can also be used to explore higher-energy structures as well. The second method unique to TransRot is the probabilistic use of magnified translational and rotational stepsizes, a process we have called “magwalking.”(2-4) These magnifications prevent molecules from becoming locked into locally minimum-energy orientations prematurely as the system is cooled, giving it the opportunity to overcome local energy barriers as needful.
-
->>>>>>> 190f181 (update README.md)
 TransRot assumes that all molecules are internally rigid throughout the simulation, i.e., each attempted Monte Carlo move is either a translation of the molecule’s center of mass or a rigid-body rotation of the molecule about a randomly chosen space-fixed axis with its origin at the center of mass. Individual atoms or atomic ions can also be simulated using TransRot, using only translational move attempts.
 
 Defining a “particle” to be either an atom or a molecule, all particles interact with one another according to an effective pair potential. The geometry of each particle as well as the parameters of the pairwise interaction potential must be chosen by the user, and are supplied within an input file, with the format described below (see "How to Add New Molecules to the Database").
@@ -129,7 +124,6 @@ All run parameters are set in config.txt. **VERY IMPORTANT:** Each parameter mus
 The particles to be used in the simulation are set at the bottom of config.txt. Each line includes the molecular formula of a particle followed by the number of that particle to be included, separated by **two or more spaces**. The default config.txt contains setup for an ammonium chloride cluster with 4 ammonium ions and 4 chloride ions, as follows:\
 NH4+  4\
 Cl-  4
-<<<<<<< HEAD
 
 ## Interaction Parameters
 
@@ -156,8 +150,6 @@ An alias line for a particle, defined by the identifier of the particle followed
   ```
 
 A full example of interaction_params.txt file can be found [here](./src/interaction_params.txt).
-=======
->>>>>>> 190f181 (update README.md)
 
 ## How to Add New Molecules to the Database
 
@@ -172,7 +164,6 @@ The pairwise interaction potential assumed by TransRot uses the formula
 <img src=https://user-images.githubusercontent.com/6625247/132400608-07cada97-4d94-4674-81e2-aaafee35f550.PNG width=50% height=50% alt="">
 
 The double sums above are meant to imply that all of the interactions are summed up between the atoms (i and j) associated with the various particles within any given system. The base units employed for these parameters are (kcal/mole, Angstroms, atomic charge units). In the database, the user specifies the parameters (A<sub>ii</sub>,B<sub>ii</sub>,C<sub>ii</sub>,D<sub>ii</sub>,Q<sub>i</sub>,Mass<sub>i</sub>) for each atom, with the following units:
-<<<<<<< HEAD
 
 | Parameter | Database Unit |
 | --- | --- |
@@ -182,30 +173,6 @@ The double sums above are meant to imply that all of the interactions are summed
 | D<sub>ij</sub> | kcal / (Angstroms<sup>12</sup>)(mole) |
 | Q<sub>i</sub> | atomic units of charge (here the charge of the electron = 1 exactly) |
 | Mass<sub>i</sub> | amu (the mass of carbon<sub>12</sub> is 12.000 amu) |
-
-=======
-
-| Parameter | Database Unit |
-| --- | --- |
-| A<sub>ii</sub> | kcal/mol |
-| B<sub>ii</sub> | Angstroms<sup>-1</sup> |
-| C<sub>ij</sub> | kcal / (Angstroms<sup>6</sup>)(mole) |
-| D<sub>ij</sub> | kcal / (Angstroms<sup>12</sup>)(mole) |
-| Q<sub>i</sub> | atomic units of charge (here the charge of the electron = 1 exactly) |
-| Mass<sub>i</sub> | amu (the mass of carbon<sub>12</sub> is 12.000 amu |
-
-<<<<<<< HEAD
-[comment]: <> "Old code if desired"
-[comment]: <> "Parameter  &nbsp;&nbsp;&nbsp;&nbsp;  Database Units \ "
-[comment]: <> "Aii  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;  kcal/mole \ "
-[comment]: <> "Bii  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;  &#40;Angstroms&#41;^{-1} \ "
-[comment]: <> "Cij  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;  kcal / &#40;Angstroms^6&#41;&#40;mole&#41; \ "
-[comment]: <> "Dij  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;  kcal / &#40;Angstroms^12&#41;&#40;mole&#41; \ "
-[comment]: <> "qi  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;  atomic units of charge &#40;here the charge of the electron = 1 exactly&#41; \ "
-[comment]: <> "Massi  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;  amu &#40;the mass of carbon-12 is 12.000 amu&#41; "
->>>>>>> 190f181 (update README.md)
-=======
->>>>>>> 999d842 (further fix README)
 
 Interactions between unlike atoms (i,j) on different particles are obtained within the code using arithmetic averages for the B parameters: \
 <img src=https://user-images.githubusercontent.com/6625247/132400815-5e64203d-a145-48f1-b484-a354d82b8bf0.PNG width=18% height=18%> \
@@ -221,19 +188,6 @@ Atomic Symbol     x      y      z      A      B      C      D      Q      mass
 ...
 ```
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-[comment]: <> "Old code if desired"
-[comment]: <> "Number of Atoms In Particle \ "
-[comment]: <> "Molecular Formula Molecular Radius (for random placement purposes only) \ "
-[comment]: <> "Atomic Symbol &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; x &nbsp; &nbsp; &nbsp; y &nbsp; &nbsp; &nbsp; z &nbsp; &nbsp; &nbsp; A &nbsp; &nbsp; &nbsp; B &nbsp; &nbsp; &nbsp; C &nbsp; &nbsp; &nbsp; D &nbsp; &nbsp; &nbsp; Q &nbsp; &nbsp; &nbsp; mass \ "
-[comment]: <> "Atomic Symbol &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; x &nbsp; &nbsp; &nbsp; y &nbsp; &nbsp; &nbsp; z &nbsp; &nbsp; &nbsp; A &nbsp; &nbsp; &nbsp; B &nbsp; &nbsp; &nbsp; C &nbsp; &nbsp; &nbsp; D &nbsp; &nbsp; &nbsp; Q &nbsp; &nbsp; &nbsp; mass \ "
-[comment]: <> "... \ "
-
->>>>>>> 190f181 (update README.md)
-=======
->>>>>>> 999d842 (further fix README)
 Continued for each atom in the particle
 
 For comparison, the parameters provided in the sample dbase file are appropriate for simulations of H2O clusters using the TIP3P interaction potential due to Jorgensen et al. (1) and are at the present time documented correctly on Wikipedia (2). In our testing, TransRot was used to successfully find the global minimum-energy structures of TIP3P and TIP4P water clusters (H2O)n with (n=2-8). (3)
@@ -273,8 +227,4 @@ To report a bug or issue, or to submit a feature request, please create a new is
 
 ## More Information
 
-<<<<<<< HEAD
-For more information regarding TransRot, optimization videos, and examples, visit the Wiki for this project. You may also visit [the project page](https://engfac.cooper.edu/topper/764) at Cooper Union. The Visual TransRot project may be found at https://github.com/xaridar/VisualTransRot.  
-=======
-For more information regarding TransRot, optimization videos, and examples, visit the Wiki for this project. You may also visit [the project page](https://engfac.cooper.edu/topper/764) at Cooper Union.
->>>>>>> 190f181 (update README.md)
+For more information regarding TransRot, optimization videos, and examples, visit the Wiki for this project. You may also visit [the project page](https://engfac.cooper.edu/topper/764) at Cooper Union. The Visual TransRot project may be found at https://github.com/xaridar/VisualTransRot.
