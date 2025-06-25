@@ -167,7 +167,7 @@ public class Space {
                             }
                         }
                         if (numGhosts == n){
-                            throw new RuntimeException("Error on line" + currLine + " in dbase.txt: Molecule " + name + " cannot be comprised of only ghost atoms.");
+                            throw new RuntimeException("Error on line " + currLine + " in dbase.txt: Molecule " + name + " cannot be comprised of only ghost atoms.");
                         }
                         Molecule m = new Molecule(name, radius, atoms);
                         dbase.add(m);
