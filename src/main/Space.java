@@ -140,16 +140,16 @@ public class Space {
                         try {
                             n = Integer.parseInt(words[0]);
                         } catch (Exception exc) {
-                            throw new Exception();
+                            throw new IOException();
                         }
                         ArrayList<Atom> atoms = new ArrayList<>();
                         if (!scanner.hasNextLine()) {
-                            throw new Exception();
+                            throw new IOException();
                         }
                         String[] s = scanner.nextLine().split(" " + " +");
                         currLine++;
                         if (s.length != 2) {
-                            throw new Exception();
+                            throw new IOException();
                         }
                         double radius = Double.parseDouble(s[1]);
                         String name = s[0];
@@ -158,7 +158,7 @@ public class Space {
                             String[] atom = scanner.nextLine().split(" " + " +");
                             currLine++;
                             if (atom.length != 10) {
-                                throw new Exception();
+                                throw new IOException();
                             }
                             Atom a = new Atom(atom[0], Double.parseDouble(atom[1]), Double.parseDouble(atom[2]), Double.parseDouble(atom[3]), Double.parseDouble(atom[4]), Double.parseDouble(atom[5]), Double.parseDouble(atom[6]), Double.parseDouble(atom[7]), Double.parseDouble(atom[8]), Double.parseDouble(atom[9]));
                             atoms.add(a);
@@ -167,24 +167,21 @@ public class Space {
                             }
                         }
                         if (numGhosts == n){
-                            System.err.println("Error on line" + currLine + " in dbase.txt: Molecule " + name + " cannot be comprised of only ghost atoms.");
-                            System.exit(1);
+                            throw new RuntimeException("Error on line" + currLine + " in dbase.txt: Molecule " + name + " cannot be comprised of only ghost atoms.");
                         }
                         Molecule m = new Molecule(name, radius, atoms);
                         dbase.add(m);
                     }
                 }
-                catch (Exception exc){
-                    System.err.println("Error on line " + currLine + " in dbase.txt: File incorrectly formatted.");
+                catch (IOException exc){
                     scanner.close();
-                    System.exit(1);
+                    throw new RuntimeException("Error on line " + currLine + " in dbase.txt: File incorrectly formatted.");
                 }
             }
             scanner.close();
     	}
-    	catch (Exception exc) {
-    		System.err.println("Error: File " + pathName + " not found.");
-            System.exit(1);
+    	catch (IOException exc) {
+    		throw new RuntimeException("Error: File " + pathName + " not found.");
     	}
     }
     //Reads annealing config from config.txt
@@ -251,20 +248,17 @@ public class Space {
                     int num = Integer.parseInt(line.split(" {2,}")[1]);
                     for (int x = 0; x < num; x++) {
                         if (!add(name)) {
-                            System.err.println("Error on line " + currLine + " in config.txt: Unable to find molecule '" + name + "' in dbase.txt.");
-                            System.exit(1);
+                            throw new RuntimeException("Error on line " + currLine + " in config.txt: Unable to find molecule '" + name + "' in dbase.txt.");
                         }
                     }
                 }
             }
             catch (Exception exc){
-                System.err.println("Error on line " + currLine + " in config.txt: File incorrectly formatted.");
-                System.exit(1);
+                throw new RuntimeException("Error on line " + currLine + " in config.txt: File incorrectly formatted.");
             }
         }
         catch (Exception exc){
-            System.err.println("Error: File " + pathName + " not found.");
-            System.exit(1);
+            throw new RuntimeException("Error: File " + pathName + " not found.");
         }
     }
     public void readInput(String pathName){
@@ -343,19 +337,16 @@ public class Space {
                         }
                     }
                     if (!dbContainsMolecule) {
-                        System.err.println("Error: Unable to find one or more molecules from Input.xyz in dbase.txt.");
-                        System.exit(1);
+                        throw new RuntimeException("Error: Unable to find one or more molecules from Input.xyz in dbase.txt.");
                     }
                 }
             }
             catch (Exception exc){
-                System.err.println("Error on line" + currLine + " in Input.xyz: File incorrectly formatted.");
-                System.exit(1);
+                throw new RuntimeException("Error on line" + currLine + " in Input.xyz: File incorrectly formatted.");
             }
         }
         catch (Exception exc){
-            System.err.println("Error: File " + pathName + " not found.");
-            System.exit(1);
+            throw new RuntimeException("Error: File " + pathName + " not found.");
         }
     }
 
@@ -423,8 +414,7 @@ public class Space {
             }
         }
         catch (Exception exc){
-            System.err.println("Error: Failed to create new directory.");
-            System.exit(1);
+            throw new RuntimeException("Error: Failed to create new directory.");
         }
     }
     //Writes atom placements to .xyz file. Programs that read .xyz files will figure out what atoms go to what molecules, so that information is unnecessary
@@ -484,8 +474,7 @@ public class Space {
             writer.close();
         }
         catch(Exception exc){
-            System.err.println("Error: Failed to write to " + dir + "/Output" + outputFileNumber + ".xyz");
-            System.exit(1);
+            throw new RuntimeException("Error: Failed to write to " + dir + "/Output" + outputFileNumber + ".xyz");
         }
     }
     //Return number of atoms in space, used for write() as part of .xyz file format
@@ -655,8 +644,7 @@ public class Space {
             writer.close();
         }
         catch(Exception exc){
-            System.err.println("Error: Failed to write to " + dir + "/Output" + outputStartNumber + "_" + outputEndNumber + "_Movie.xyz");
-            System.exit(1);
+            throw new RuntimeException("Error: Failed to write to " + dir + "/Output" + outputStartNumber + "_" + outputEndNumber + "_Movie.xyz");
         }
     }
     //Writes output and logs to appropriate file in dir, then prints to terminal
@@ -669,8 +657,7 @@ public class Space {
             System.out.println(text);
         }
         catch (Exception exc){
-            System.err.println("Error: Failed to write to " + dir + "/log.txt.");
-            System.exit(1);
+            throw new RuntimeException("Error: Failed to write to " + dir + "/log.txt.");
         }
     }
     //Appends energy values to energies.txt in dir if staticTemp = true
@@ -683,8 +670,7 @@ public class Space {
                 writer.close();
             }
             catch (Exception exc){
-                System.err.println("Error: Failed to write to " + dir + "/energies.txt.");
-                System.exit(1);
+                throw new RuntimeException("Error: Failed to write to " + dir + "/energies.txt.");
             }
         }
     }
@@ -698,8 +684,7 @@ public class Space {
                 writer.close();
             }
             catch (Exception exc){
-                System.err.println("Error: Failed to write to " + dir + "/acceptance_ratios.txt");
-                System.exit(1);
+                throw new RuntimeException("Error: Failed to write to " + dir + "/acceptance_ratios.txt");
             }
         }
     }
@@ -710,8 +695,7 @@ public class Space {
             Files.copy(new File(dir + "/Output" + minEnergyToothNum + ".xyz").toPath(), new File(writePath).toPath());
         }
         catch (Exception exc){
-            System.err.println("Error: Failed to write to " + dir + "/min_energy_structure" + minEnergyToothNum + ".xyz");
-            System.exit(1);
+            throw new RuntimeException("Error: Failed to write to " + dir + "/min_energy_structure" + minEnergyToothNum + ".xyz");
         }
     }
 
@@ -726,8 +710,7 @@ public class Space {
             writer.close();
         }
         catch (Exception exc){
-            System.err.println("Error: Failed to write to " + dir + "/configurational_heat_capacities.txt");
-            System.exit(1);
+            throw new RuntimeException("Error: Failed to write to " + dir + "/configurational_heat_capacities.txt");
         }
     }
 
@@ -743,7 +726,7 @@ public class Space {
             writer.write((procEnd - procStart) + "");
             writer.close();
         }
-        catch (Exception exc){
+        catch (Exception exc) {
             System.err.println("Error: Failed to write to " + dir + "/elapsed_time.log");
             System.exit(1);
         }

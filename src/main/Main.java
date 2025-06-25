@@ -4,6 +4,7 @@ import org.apache.commons.math3.util.Pair;
 import org.apache.commons.math3.util.Precision;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -13,20 +14,20 @@ import java.util.Map;
 
 public class Main {
     private static final MersenneTwister r = new MersenneTwister();
-    public static void main(String[] args) throws UnsupportedEncodingException {
+    public static void main(String[] args) {
     	long procStart = System.nanoTime();
 		Space s = new Space(10);
     	try {
 			long time1 = System.nanoTime();
 			Map<String, String> parsedArgs = getArgs(args);
+			s.makeDirectoryName(parsedArgs);
+			s.makeDirectory(parsedArgs);
 			s.readDB(parsedArgs.get("dbase"));
 			s.readCFG(parsedArgs.get("config"));
 			s.setupPairVals();
 			if (!s.useInput && parsedArgs.get("inputIncluded").equals("yes")) {
-				System.err.println("Error: You cannot provide a parameter for --input if \"Use Input.xyz\" is not selected in your config.");
-				System.exit(1);
+				throw new RuntimeException("Error: You cannot provide a parameter for --input if \"Use Input.xyz\" is not selected in your config.");
 			}
-			s.makeDirectoryName(parsedArgs);
 			System.out.println("Writing output to: " + s.getDir());
 			if (s.useInput) {
 				//Read molecules from Input.xyz, do not propagate
@@ -37,7 +38,6 @@ public class Main {
 					s.size = s.size * 1.1;
 				}
 			}
-			s.makeDirectory(parsedArgs);
 			long time2 = System.nanoTime();
 			String stamp = timestamp(time1, time2);
 			s.write(0);
@@ -61,13 +61,14 @@ public class Main {
 			time2 = System.nanoTime();
 			stamp = timestamp(time1, time2);
 			s.log("Annealing done in " + stamp + ".");
+		} catch (Exception exc) {
+    		System.err.println(exc.getMessage());
 		} finally {
     		s.writeExecTime(procStart);
 		}
-
     }
 
-    public static Map<String, String> getArgs(String[] args) throws UnsupportedEncodingException {
+    public static Map<String, String> getArgs(String[] args) throws IOException {
 		//Construct path to file, rather complicated but has to work with .jar or project files for testing
 		String pathDir = Main.class.getProtectionDomain().getCodeSource().getLocation().getPath();
 		pathDir = URLDecoder.decode(pathDir, "utf-8");
@@ -85,51 +86,46 @@ public class Main {
 			String arg = args[i];
 			String argName = null;
 			String fileType = null;
-			try {
-				switch (arg) {
-					case "-i":
-					case "--input":
-						argName = "input";
-						fileType = ".xyz";
-						parsed.put("inputIncluded", "yes");
-					case "-d":
-					case "--dbase":
-						if (argName == null) argName = "dbase";
-						if (fileType == null) fileType = ".txt";
-					case "-c":
-					case "--config":
-						if (argName == null) argName = "config";
-						if (fileType == null) fileType = ".txt";
-						if (i == argsLength - 1) throw new Exception(String.format("Error: Expected file path for \"%s\" parameter", argName));
-						i++;
-						String value = args[i];
-						File file = new File(value);
-						if (!file.exists()) throw new Exception(String.format("Error: File not found: %s", file.getCanonicalPath()));
-						if (!file.canRead()) throw new Exception(String.format("Error: Cannot read file %s", file.getCanonicalPath()));
-						if (!file.getPath().endsWith(fileType)) throw new Exception(String.format("Error: Bad filetype for \"%s\" parameter; expected %s file", argName, fileType));
-						parsed.put(argName, value);
-						break;
-					case "-o":
-					case "--output":
-						if (i == argsLength - 1) throw new Exception("Error: Expected output directory path for \"output\" parameter");
-						i++;
-						value = args[i];
-						file = new File(value);
-						if (!file.exists()) throw new Exception(String.format("Error: Directory not found: %s", file.getCanonicalPath()));
-						if (!file.isDirectory()) throw new Exception(String.format("Error: %s is not a directory", file.getCanonicalPath()));
-						if (!file.canWrite()) throw new Exception(String.format("Error: Cannot write to directory %s", file.getCanonicalPath()));
-						parsed.put("output", value);
-						break;
-					default:
-						if (arg.startsWith("-")) {
-							throw new Exception(String.format("Error: Unknown flag: %s", arg));
-						} else {
-							throw new Exception(String.format("Error: Unexpected argument: %s", arg));
-						}
-				}
-			} catch (Exception e) {
-				System.err.println(e.getMessage());
-				System.exit(1);
+			switch (arg) {
+				case "-i":
+				case "--input":
+					argName = "input";
+					fileType = ".xyz";
+					parsed.put("inputIncluded", "yes");
+				case "-d":
+				case "--dbase":
+					if (argName == null) argName = "dbase";
+					if (fileType == null) fileType = ".txt";
+				case "-c":
+				case "--config":
+					if (argName == null) argName = "config";
+					if (fileType == null) fileType = ".txt";
+					if (i == argsLength - 1) throw new RuntimeException(String.format("Error: Expected file path for \"%s\" parameter", argName));
+					i++;
+					String value = args[i];
+					File file = new File(value);
+					if (!file.exists()) throw new RuntimeException(String.format("Error: File not found: %s", file.getCanonicalPath()));
+					if (!file.canRead()) throw new RuntimeException(String.format("Error: Cannot read file %s", file.getCanonicalPath()));
+					if (!file.getPath().endsWith(fileType)) throw new RuntimeException(String.format("Error: Bad filetype for \"%s\" parameter; expected %s file", argName, fileType));
+					parsed.put(argName, value);
+					break;
+				case "-o":
+				case "--output":
+					if (i == argsLength - 1) throw new RuntimeException("Error: Expected output directory path for \"output\" parameter");
+					i++;
+					value = args[i];
+					file = new File(value);
+					if (!file.exists()) throw new RuntimeException(String.format("Error: Directory not found: %s", file.getCanonicalPath()));
+					if (!file.isDirectory()) throw new RuntimeException(String.format("Error: %s is not a directory", file.getCanonicalPath()));
+					if (!file.canWrite()) throw new RuntimeException(String.format("Error: Cannot write to directory %s", file.getCanonicalPath()));
+					parsed.put("output", value);
+					break;
+				default:
+					if (arg.startsWith("-")) {
+						throw new RuntimeException(String.format("Error: Unknown flag: %s", arg));
+					} else {
+						throw new RuntimeException(String.format("Error: Unexpected argument: %s", arg));
+					}
 			}
 		}
 
