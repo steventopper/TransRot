@@ -722,11 +722,10 @@ public class Space {
         long procEnd = System.nanoTime();
         try {
             String writePath = dir + "/elapsed_time.log";
-            FileWriter writer = new FileWriter(writePath, true);
+            FileWriter writer = new FileWriter(writePath, false);
             writer.write((procEnd - procStart) + "");
             writer.close();
-        }
-        catch (Exception exc) {
+        } catch (Exception exc) {
             System.err.println("Error: Failed to write to " + dir + "/elapsed_time.log");
             System.exit(1);
         }
