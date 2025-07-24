@@ -11,6 +11,8 @@ import org.apache.commons.math3.random.MersenneTwister;
 import org.apache.commons.math3.util.Pair;
 import org.apache.commons.math3.util.Precision;
 import java.time.LocalDateTime;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class Space {
     //All set in config.txt
@@ -248,104 +250,74 @@ public class Space {
                     int num = Integer.parseInt(line.split(" {2,}")[1]);
                     for (int x = 0; x < num; x++) {
                         if (!add(name)) {
+                            scanner.close();
                             throw new RuntimeException("Error on line " + currLine + " in config.txt: Unable to find molecule '" + name + "' in dbase.txt.");
                         }
                     }
                 }
             }
-            catch (Exception exc){
+            catch (NumberFormatException exc){
+                scanner.close();
                 throw new RuntimeException("Error on line " + currLine + " in config.txt: File incorrectly formatted.");
             }
         }
-        catch (Exception exc){
+        catch (IOException exc){
             throw new RuntimeException("Error: File " + pathName + " not found.");
         }
     }
     public void readInput(String pathName){
-        try{
-            Scanner scanner = new Scanner(new File(pathName));
+        try (Scanner scanner = new Scanner(new File(pathName))) {
             int currLine = 1; //Tracks current line for error printing
             //Skip next line, since we don't care about the total number of atoms, we get it all from the comment on the next line
-            scanner.nextLine();
+            String firstLine = scanner.nextLine().trim();
+            int numAtoms = Integer.parseInt(firstLine);
+            int atomsRead = 0;
+
             try {
-                String[] atomNums = scanner.nextLine().split(" ");
+                String[] molInfo = scanner.nextLine().split("\\|");
                 currLine++;
-                for (String num : atomNums) {
-                    int atomNum;
-                    boolean unmoving = false;
-                    try {
-                        atomNum = Integer.parseInt(num);
-                    } catch (NumberFormatException exc) {
-                        atomNum = Integer.parseInt(num.substring(0, num.length() - 1));
-                        unmoving = true;
-                    }
-                    //Four arrays used for temporary storage, never get too large since they're overwritten for each molecule
-                    String[] atomSyms = new String[atomNum];
-                    double[] atomXs = new double[atomNum];
-                    double[] atomYs = new double[atomNum];
-                    double[] atomZs = new double[atomNum];
-                    for (int y = 0; y < atomNum; y++) {
-                        String[] atomVals = scanner.nextLine().split(" +"); //splits by all sets of spaces > 1
-                        currLine++;
-                        //If line is preceded by space, everything breaks since we get atomVals[0] == "". So, if that's true, start from 1.
-                        int c = 0;
-                        if (atomVals[0].isEmpty()) {
-                            c = 1;
+                for (String info : molInfo) {
+                    String trimmed = info.trim();
+                    String[] parts = trimmed.split(" ");
+                    if (parts.length < 2) throw new RuntimeException("Error: Incorrect format on line 2 of input file");
+                    String num = parts[0];
+                    boolean frozen = num.toUpperCase().endsWith("F");
+                    int numMols = Integer.parseInt(num.substring(0, num.length() - (frozen ? 1 : 0)));
+                    String molName = String.join(" ", Arrays.stream(parts).collect(Collectors.toList()).subList(1, parts.length));
+                    if (!dbase.stream().map(m -> m.name).collect(Collectors.toList()).contains(molName)) throw new RuntimeException("Error: Unable to find one or more molecules from input file in dbase.txt.");
+                    Molecule mol = dbase.stream().filter(m -> m.name.equals(molName)).findFirst().get();
+
+                    for (int i = 0; i < numMols; i++) {
+                        Molecule molecule = new Molecule(mol);
+                        for (int j = 0; j < molecule.atoms.size(); j++) {
+                            String[] atomVals = scanner.nextLine().trim().split(" {2,}"); // splits by all sets of spaces > 1
+                            currLine++;
+                            String symbol = atomVals[0];
+                            if (!symbol.equals(molecule.atoms.get(j).symbol)) throw new RuntimeException("Error: Unexpected atom on line " + currLine + " of input file.");
+
+                            double x = Double.parseDouble(atomVals[1]);
+                            double y = Double.parseDouble(atomVals[2]);
+                            double z = Double.parseDouble(atomVals[3]);
+                            atomsRead++;
+                            Atom a = molecule.atoms.get(j);
+                            a.x = x;
+                            a.y = y;
+                            a.z = z;
                         }
-                        atomSyms[y] = atomVals[c];
-                        atomXs[y] = Double.parseDouble(atomVals[c + 1]);
-                        atomYs[y] = Double.parseDouble(atomVals[c + 2]);
-                        atomZs[y] = Double.parseDouble(atomVals[c + 3]);
-                    }
-                    //Set up hashmap to compare to atomSymbols in Molecule
-                    HashMap<String, Integer> matcher = new HashMap<>();
-                    for (String s : atomSyms) {
-                        if (matcher.containsKey(s)) {
-                            matcher.replace(s, matcher.get(s) + 1);
-                        } else {
-                            matcher.put(s, 1);
-                        }
-                    }
-                    boolean dbContainsMolecule = false;
-                    for (Molecule molecule : dbase) {
-                        if (molecule.atomSymbols.equals(matcher)) {
-                            //Copy molecule from dbase
-                            dbContainsMolecule = true;
-                            Molecule m = new Molecule(molecule);
-                            //Move each atom in m to positions defined in Input.xyz
-                            ArrayList<Atom> oldAtoms = m.atoms;
-                            ArrayList<Atom> newAtoms = new ArrayList<>();
-                            for (int z = 0; z < atomSyms.length; z++) {
-                                for (Atom atom : oldAtoms) {
-                                    if (atom.symbol.equals(atomSyms[z])) {
-                                        atom.x = atomXs[z];
-                                        atom.y = atomYs[z];
-                                        atom.z = atomZs[z];
-                                        oldAtoms.remove(atom);
-                                        newAtoms.add(atom);
-                                        break;
-                                    }
-                                }
-                            }
-                            m.atoms = newAtoms;
-                            m.setCenterOfMass();
-                            space.add(m);
-                            if (!unmoving) {
-                                moveableMolecules.add(m);
-                            }
-                            break;
-                        }
-                    }
-                    if (!dbContainsMolecule) {
-                        throw new RuntimeException("Error: Unable to find one or more molecules from Input.xyz in dbase.txt.");
+                        molecule.setCenterOfMass();
+                        space.add(molecule);
+                        if (!frozen) moveableMolecules.add(molecule);
                     }
                 }
+                if (scanner.hasNextLine() && !scanner.nextLine().equals("")) throw new RuntimeException("Error: Molecule counts must match # of lines in input file.");
+                if (numAtoms != atomsRead) throw new RuntimeException("Error: Atom count at top of input file does not match number of molecules read.");
             }
-            catch (Exception exc){
-                throw new RuntimeException("Error on line" + currLine + " in Input.xyz: File incorrectly formatted.");
+            catch (NumberFormatException exc){
+                scanner.close();
+                throw new RuntimeException("Error on line " + currLine + " in input file: File incorrectly formatted.");
             }
         }
-        catch (Exception exc){
+        catch (IOException exc){
             throw new RuntimeException("Error: File " + pathName + " not found.");
         }
     }
