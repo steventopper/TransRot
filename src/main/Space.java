@@ -395,8 +395,23 @@ public class Space {
         	String pathName = dir + "/Output" + outputFileNumber + ".xyz"; //dir specified in makeDirectory()
             FileWriter writer = new FileWriter(pathName);
             double toothEnergy = calcEnergy();
+
+            StringBuilder molString = new StringBuilder();
+            String lastMol = "";
+            int lastCount = 0;
+            for (Molecule m : space) {
+                if (!m.name.equals(lastMol)) {
+                    if (lastMol.length() > 0) molString.append(lastCount).append(" ").append(lastMol).append(" | ");
+                    lastCount = 0;
+                    lastMol = m.name;
+                }
+                lastCount++;
+            }
+            molString.append(lastCount).append(" ").append(lastMol).append(" | ");
+            molString.delete(molString.length() - 3, molString.length());
+
             //Write to file in correct .xyz output format
-            StringBuilder content = new StringBuilder("          " + numAtoms() + "\nEnergy: " + toothEnergy + " Kcal/mole");
+            StringBuilder content = new StringBuilder("          " + numAtoms() + "\nEnergy: " + toothEnergy + " Kcal/mole\t\t" + molString);
             for (Molecule m : space){
                 for (Atom a : m.atoms){
                     if (a.symbol.contains("*")){
