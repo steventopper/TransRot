@@ -411,7 +411,7 @@ public class Space {
             molString.delete(molString.length() - 3, molString.length());
 
             //Write to file in correct .xyz output format
-            StringBuilder content = new StringBuilder("          " + numAtoms() + "\nEnergy: " + toothEnergy + " Kcal/mole\t\t" + molString);
+            StringBuilder content = new StringBuilder("          " + numAtoms() + "\nEnergy: " + toothEnergy + " Kcal/mole  " + molString);
             for (Molecule m : space){
                 for (Atom a : m.atoms){
                     if (a.symbol.contains("*")){
