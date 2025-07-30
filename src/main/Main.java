@@ -181,7 +181,7 @@ public class Main {
 					if (roundedTemperature == 0) continue;
 					double avgEnergy = totalEnergy / numMovesPerPoint;
 					double avgSquaredEnergy = totalSquaredEnergy / numMovesPerPoint;
-					double configurationalHeatCapacity = (Math.pow(avgEnergy, 2) - avgSquaredEnergy) / (Space.BOLTZMANN_CONSTANT * Math.pow(t, 2));
+					double configurationalHeatCapacity = (avgSquaredEnergy - Math.pow(avgEnergy, 2)) / (Space.BOLTZMANN_CONSTANT * Math.pow(t, 2));
 					s.writeConfigurationalHeatCapacity(roundedTemperature, avgEnergy, configurationalHeatCapacity);
 				}
     			if (!s.staticTemp){
