@@ -274,7 +274,7 @@ public class Space {
             int atomsRead = 0;
 
             try {
-                String[] molInfo = scanner.nextLine().split("\\|");
+                String[] molInfo = scanner.nextLine().replaceFirst("Energy: -?\\d*.?\\d* Kcal/mole", "").split("\\|");
                 currLine++;
                 for (String info : molInfo) {
                     String trimmed = info.trim();

@@ -129,6 +129,12 @@ public class Main {
 			}
 		}
 
+		// test existence of all files
+		File cFile = new File(parsed.get("config"));
+		if (!cFile.exists()) throw new RuntimeException(String.format("Error: File not found: %s", cFile.getCanonicalPath()));
+		File dFile = new File(parsed.get("dbase"));
+		if (!dFile.exists()) throw new RuntimeException(String.format("Error: File not found: %s", dFile.getCanonicalPath()));
+
 		return parsed;
 	}
 
