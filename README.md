@@ -141,7 +141,7 @@ The double sums above are meant to imply that all of the interactions are summed
 | C<sub>ij</sub> | kcal / (Angstroms<sup>6</sup>)(mole) |
 | D<sub>ij</sub> | kcal / (Angstroms<sup>12</sup>)(mole) |
 | Q<sub>i</sub> | atomic units of charge (here the charge of the electron = 1 exactly) |
-| Mass<sub>i</sub> | amu (the mass of carbon<sub>12</sub> is 12.000 amu |
+| Mass<sub>i</sub> | amu (the mass of carbon<sub>12</sub> is 12.000 amu) |
 
 
 Interactions between unlike atoms (i,j) on different particles are obtained within the code using arithmetic averages for the B parameters: \
