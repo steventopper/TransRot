@@ -4,12 +4,15 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.net.URLDecoder;
 import java.nio.file.Files;
+import java.security.Security;
 import java.util.*;
 
 import org.apache.commons.math3.random.MersenneTwister;
 import org.apache.commons.math3.util.Pair;
 import org.apache.commons.math3.util.Precision;
 import java.time.LocalDateTime;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class Space {
     //All set in config.txt
@@ -125,12 +128,8 @@ public class Space {
         return true;
     }
     //Reads molecules from dbase.txt
-    public void readDB(){
+    public void readDB(String pathName){
     	try {
-    	    //Construct path to file, rather complicated but has to work with .jar or project files for testing
-            String pathName = Main.class.getProtectionDomain().getCodeSource().getLocation().getPath();
-            pathName = URLDecoder.decode(pathName, "utf-8");
-            pathName = "/" + pathName.substring(1,pathName.lastIndexOf("/")) + "/dbase.txt";
             Scanner scanner = new Scanner(new File(pathName));
             int currLine = 0; //Used to print line during error detection
             while (scanner.hasNextLine()){
@@ -143,16 +142,16 @@ public class Space {
                         try {
                             n = Integer.parseInt(words[0]);
                         } catch (Exception exc) {
-                            throw new Exception();
+                            throw new IOException();
                         }
                         ArrayList<Atom> atoms = new ArrayList<>();
                         if (!scanner.hasNextLine()) {
-                            throw new Exception();
+                            throw new IOException();
                         }
                         String[] s = scanner.nextLine().split(" " + " +");
                         currLine++;
                         if (s.length != 2) {
-                            throw new Exception();
+                            throw new IOException();
                         }
                         double radius = Double.parseDouble(s[1]);
                         String name = s[0];
@@ -161,7 +160,7 @@ public class Space {
                             String[] atom = scanner.nextLine().split(" " + " +");
                             currLine++;
                             if (atom.length != 10) {
-                                throw new Exception();
+                                throw new IOException();
                             }
                             Atom a = new Atom(atom[0], Double.parseDouble(atom[1]), Double.parseDouble(atom[2]), Double.parseDouble(atom[3]), Double.parseDouble(atom[4]), Double.parseDouble(atom[5]), Double.parseDouble(atom[6]), Double.parseDouble(atom[7]), Double.parseDouble(atom[8]), Double.parseDouble(atom[9]));
                             atoms.add(a);
@@ -170,33 +169,27 @@ public class Space {
                             }
                         }
                         if (numGhosts == n){
-                            System.out.println("Error on line" + currLine + " in dbase.txt: Molecule " + name + " cannot be comprised of only ghost atoms.");
-                            System.exit(0);
+                            throw new RuntimeException("Error on line " + currLine + " in dbase.txt: Molecule " + name + " cannot be comprised of only ghost atoms.");
                         }
                         Molecule m = new Molecule(name, radius, atoms);
                         dbase.add(m);
                     }
                 }
-                catch (Exception exc){
-                    System.out.println("Error on line " + currLine + " in dbase.txt: File incorrectly formatted.");
+                catch (IOException exc){
                     scanner.close();
-                    System.exit(0);
+                    throw new RuntimeException("Error on line " + currLine + " in dbase.txt: File incorrectly formatted.");
                 }
             }
             scanner.close();
     	}
-    	catch (Exception exc) {
-    		System.out.println("Error: File " + dir + "/dbase.txt not found.");
-            System.exit(0);
+    	catch (IOException exc) {
+    		throw new RuntimeException("Error: File " + pathName + " not found.");
     	}
     }
     //Reads annealing config from config.txt
-    public void readCFG(){
+    public void readCFG(String pathName){
         try {
             //Construct path to file, rather complicated but has to work with .jar or project files for testing
-            String pathName = Main.class.getProtectionDomain().getCodeSource().getLocation().getPath();
-            pathName = URLDecoder.decode(pathName, "utf-8");
-            pathName = "/" + pathName.substring(1, pathName.lastIndexOf("/")) + "/config.txt";
             Scanner scanner = new Scanner(new File(pathName));
             int currLine = 3; //Tracks current line for error printing
             //Skip 2 lines for comments
@@ -253,119 +246,79 @@ public class Space {
                 while (scanner.hasNextLine()) {
                     String line = scanner.nextLine();
                     currLine++;
-                    String name = line.split(" ")[0];
-                    int num = Integer.parseInt(line.split(" ")[1]);
+                    String name = line.split(" {2,}")[0];
+                    int num = Integer.parseInt(line.split(" {2,}")[1]);
                     for (int x = 0; x < num; x++) {
                         if (!add(name)) {
-                            System.out.println("Error on line " + currLine + " in config.txt: Unable to find molecule '" + name + "' in dbase.txt.");
-                            System.exit(0);
+                            scanner.close();
+                            throw new RuntimeException("Error on line " + currLine + " in config.txt: Unable to find molecule '" + name + "' in dbase.txt.");
                         }
                     }
                 }
             }
-            catch (Exception exc){
-                System.out.println("Error on line " + currLine + " in config.txt: File incorrectly formatted.");
-                System.exit(0);
+            catch (NumberFormatException exc){
+                scanner.close();
+                throw new RuntimeException("Error on line " + currLine + " in config.txt: File incorrectly formatted.");
             }
         }
-        catch (Exception exc){
-            System.out.println("Error: File config.txt not found.");
-            System.exit(0);
+        catch (IOException exc){
+            throw new RuntimeException("Error: File " + pathName + " not found.");
         }
     }
-    public void readInput(){
-        try{
-            //Construct path to file, rather complicated but has to work with .jar or project files for testing
-            String pathName = Main.class.getProtectionDomain().getCodeSource().getLocation().getPath();
-            pathName = URLDecoder.decode(pathName, "utf-8");
-            pathName = "/" + pathName.substring(1, pathName.lastIndexOf("/")) + "/Input.xyz";
-            Scanner scanner = new Scanner(new File(pathName));
+    public void readInput(String pathName){
+        try (Scanner scanner = new Scanner(new File(pathName))) {
             int currLine = 1; //Tracks current line for error printing
             //Skip next line, since we don't care about the total number of atoms, we get it all from the comment on the next line
-            scanner.nextLine();
+            String firstLine = scanner.nextLine().trim();
+            int numAtoms = Integer.parseInt(firstLine);
+            int atomsRead = 0;
+
             try {
-                String[] atomNums = scanner.nextLine().split(" ");
+                String[] molInfo = scanner.nextLine().replaceFirst("Energy: -?\\d*.?\\d* Kcal/mole", "").split("\\|");
                 currLine++;
-                for (String num : atomNums) {
-                    int atomNum;
-                    boolean unmoving = false;
-                    try {
-                        atomNum = Integer.parseInt(num);
-                    } catch (NumberFormatException exc) {
-                        atomNum = Integer.parseInt(num.substring(0, num.length() - 1));
-                        unmoving = true;
-                    }
-                    //Four arrays used for temporary storage, never get too large since they're overwritten for each molecule
-                    String[] atomSyms = new String[atomNum];
-                    double[] atomXs = new double[atomNum];
-                    double[] atomYs = new double[atomNum];
-                    double[] atomZs = new double[atomNum];
-                    for (int y = 0; y < atomNum; y++) {
-                        String[] atomVals = scanner.nextLine().split(" +"); //splits by all sets of spaces > 1
-                        currLine++;
-                        //If line is preceded by space, everything breaks since we get atomVals[0] == "". So, if that's true, start from 1.
-                        int c = 0;
-                        if (atomVals[0].isEmpty()) {
-                            c = 1;
+                for (String info : molInfo) {
+                    String trimmed = info.trim();
+                    String[] parts = trimmed.split(" ");
+                    if (parts.length < 2) throw new RuntimeException("Error: Incorrect format on line 2 of input file");
+                    String num = parts[0];
+                    boolean frozen = num.toUpperCase().endsWith("F");
+                    int numMols = Integer.parseInt(num.substring(0, num.length() - (frozen ? 1 : 0)));
+                    String molName = String.join(" ", Arrays.stream(parts).collect(Collectors.toList()).subList(1, parts.length));
+                    if (!dbase.stream().map(m -> m.name).collect(Collectors.toList()).contains(molName)) throw new RuntimeException("Error: Unable to find one or more molecules from input file in dbase.txt.");
+                    Molecule mol = dbase.stream().filter(m -> m.name.equals(molName)).findFirst().get();
+
+                    for (int i = 0; i < numMols; i++) {
+                        Molecule molecule = new Molecule(mol);
+                        for (int j = 0; j < molecule.atoms.size(); j++) {
+                            String[] atomVals = scanner.nextLine().trim().split(" {2,}"); // splits by all sets of spaces > 1
+                            currLine++;
+                            String symbol = atomVals[0];
+                            if (!symbol.equals(molecule.atoms.get(j).symbol)) throw new RuntimeException("Error: Unexpected atom on line " + currLine + " of input file.");
+
+                            double x = Double.parseDouble(atomVals[1]);
+                            double y = Double.parseDouble(atomVals[2]);
+                            double z = Double.parseDouble(atomVals[3]);
+                            atomsRead++;
+                            Atom a = molecule.atoms.get(j);
+                            a.x = x;
+                            a.y = y;
+                            a.z = z;
                         }
-                        atomSyms[y] = atomVals[c];
-                        atomXs[y] = Double.parseDouble(atomVals[c + 1]);
-                        atomYs[y] = Double.parseDouble(atomVals[c + 2]);
-                        atomZs[y] = Double.parseDouble(atomVals[c + 3]);
-                    }
-                    //Set up hashmap to compare to atomSymbols in Molecule
-                    HashMap<String, Integer> matcher = new HashMap<>();
-                    for (String s : atomSyms) {
-                        if (matcher.containsKey(s)) {
-                            matcher.replace(s, matcher.get(s) + 1);
-                        } else {
-                            matcher.put(s, 1);
-                        }
-                    }
-                    boolean dbContainsMolecule = false;
-                    for (Molecule molecule : dbase) {
-                        if (molecule.atomSymbols.equals(matcher)) {
-                            //Copy molecule from dbase
-                            dbContainsMolecule = true;
-                            Molecule m = new Molecule(molecule);
-                            //Move each atom in m to positions defined in Input.xyz
-                            ArrayList<Atom> oldAtoms = m.atoms;
-                            ArrayList<Atom> newAtoms = new ArrayList<>();
-                            for (int z = 0; z < atomSyms.length; z++) {
-                                for (Atom atom : oldAtoms) {
-                                    if (atom.symbol.equals(atomSyms[z])) {
-                                        atom.x = atomXs[z];
-                                        atom.y = atomYs[z];
-                                        atom.z = atomZs[z];
-                                        oldAtoms.remove(atom);
-                                        newAtoms.add(atom);
-                                        break;
-                                    }
-                                }
-                            }
-                            m.atoms = newAtoms;
-                            m.setCenterOfMass();
-                            space.add(m);
-                            if (!unmoving) {
-                                moveableMolecules.add(m);
-                            }
-                            break;
-                        }
-                    }
-                    if (!dbContainsMolecule) {
-                        System.out.println("Error: Unable to find one or more molecules from Input.xyz in dbase.txt.");
-                        System.exit(0);
+                        molecule.setCenterOfMass();
+                        space.add(molecule);
+                        if (!frozen) moveableMolecules.add(molecule);
                     }
                 }
+                if (scanner.hasNextLine() && !scanner.nextLine().equals("")) throw new RuntimeException("Error: Molecule counts must match # of lines in input file.");
+                if (numAtoms != atomsRead) throw new RuntimeException("Error: Atom count at top of input file does not match number of molecules read.");
             }
-            catch (Exception exc){
-                System.out.println("Error on line" + currLine + " in Input.xyz: File incorrectly formatted.");
-                System.exit(0);
+            catch (NumberFormatException exc){
+                scanner.close();
+                throw new RuntimeException("Error on line " + currLine + " in input file: File incorrectly formatted.");
             }
         }
-        catch (Exception exc){
-            System.out.println("Error: File Input.xyz not found.");
-            System.exit(0);
+        catch (IOException exc){
+            throw new RuntimeException("Error: File " + pathName + " not found.");
         }
     }
 
@@ -391,25 +344,27 @@ public class Space {
             }
         }
     }
-    //Creates new directory to place output files into
-    public void makeDirectory(){
+    // creates directory path to be saved to later
+    public void makeDirectoryName(Map<String, String> parsedArgs)  {
         //Get current datetime and create directory name
         LocalDateTime time = LocalDateTime.now();
         String name = time.getYear() + "_" + time.getMonthValue() + "_" + time.getDayOfMonth() + "_" + time.getHour() + "_" + time.getMinute() + "_" + time.getSecond();
+        String dirName = parsedArgs.get("output") + "/" + name;
+        // throws an exception if directory cannot be created
+        SecurityManager security = System.getSecurityManager();
+        if (security != null) security.checkWrite(dirName);
+        dir = dirName;
+    }
+    //Creates new directory to place output files into
+    public void makeDirectory(Map<String, String> parsedArgs){
         //Get path of object
         try {
-            String dirPath = Main.class.getProtectionDomain().getCodeSource().getLocation().getPath();
-            dirPath = URLDecoder.decode(dirPath, "utf-8");
-            dir = "/" + dirPath.substring(1, dirPath.lastIndexOf("/")) + "/" + name;
             File f = new File(dir);
             if (!f.mkdir()){
                 throw new Exception();
             }
-            //Copy config.txt to new directory
-            String cfgPath = Main.class.getProtectionDomain().getCodeSource().getLocation().getPath();
-            cfgPath = URLDecoder.decode(cfgPath, "utf-8");
-            cfgPath = "/" + cfgPath.substring(1, cfgPath.lastIndexOf("/")) + "/config.txt";
-            Scanner scanner = new Scanner(new File(cfgPath));
+            //Copy config.txt to new directory;
+            Scanner scanner = new Scanner(new File(parsedArgs.get("config")));
             StringBuilder out = new StringBuilder();
             while (scanner.hasNextLine()){
                 out.append(scanner.nextLine()).append("\n");
@@ -419,10 +374,7 @@ public class Space {
             writer.write(out.toString());
             writer.close();
             if (useInput) { //If enabled, copy Input.xyz to new directory
-                String inputPath = Main.class.getProtectionDomain().getCodeSource().getLocation().getPath();
-                inputPath = URLDecoder.decode(inputPath, "utf-8");
-                inputPath = "/" + inputPath.substring(1, inputPath.lastIndexOf("/")) + "/Input.xyz";
-                scanner = new Scanner(new File(inputPath));
+                scanner = new Scanner(new File(parsedArgs.get("input")));
                 out = new StringBuilder();
                 while (scanner.hasNextLine()) {
                     out.append(scanner.nextLine()).append("\n");
@@ -434,8 +386,7 @@ public class Space {
             }
         }
         catch (Exception exc){
-            System.out.println("Error: Failed to create new directory.");
-            System.exit(0);
+            throw new RuntimeException("Error: Failed to create new directory.");
         }
     }
     //Writes atom placements to .xyz file. Programs that read .xyz files will figure out what atoms go to what molecules, so that information is unnecessary
@@ -444,8 +395,23 @@ public class Space {
         	String pathName = dir + "/Output" + outputFileNumber + ".xyz"; //dir specified in makeDirectory()
             FileWriter writer = new FileWriter(pathName);
             double toothEnergy = calcEnergy();
+
+            StringBuilder molString = new StringBuilder();
+            String lastMol = "";
+            int lastCount = 0;
+            for (Molecule m : space) {
+                if (!m.name.equals(lastMol)) {
+                    if (lastMol.length() > 0) molString.append(lastCount).append(" ").append(lastMol).append(" | ");
+                    lastCount = 0;
+                    lastMol = m.name;
+                }
+                lastCount++;
+            }
+            molString.append(lastCount).append(" ").append(lastMol).append(" | ");
+            molString.delete(molString.length() - 3, molString.length());
+
             //Write to file in correct .xyz output format
-            StringBuilder content = new StringBuilder("          " + numAtoms() + "\nEnergy: " + toothEnergy + " Kcal/mole");
+            StringBuilder content = new StringBuilder("          " + numAtoms() + "\nEnergy: " + toothEnergy + " Kcal/mole  " + molString);
             for (Molecule m : space){
                 for (Atom a : m.atoms){
                     if (a.symbol.contains("*")){
@@ -495,8 +461,7 @@ public class Space {
             writer.close();
         }
         catch(Exception exc){
-            System.out.println("Error: Failed to write to " + dir + "/Output" + outputFileNumber + ".xyz");
-            System.exit(0);
+            throw new RuntimeException("Error: Failed to write to " + dir + "/Output" + outputFileNumber + ".xyz");
         }
     }
     //Return number of atoms in space, used for write() as part of .xyz file format
@@ -666,8 +631,7 @@ public class Space {
             writer.close();
         }
         catch(Exception exc){
-            System.out.println("Error: Failed to write to " + dir + "/Output" + outputStartNumber + "_" + outputEndNumber + "_Movie.xyz");
-            System.exit(0);
+            throw new RuntimeException("Error: Failed to write to " + dir + "/Output" + outputStartNumber + "_" + outputEndNumber + "_Movie.xyz");
         }
     }
     //Writes output and logs to appropriate file in dir, then prints to terminal
@@ -680,8 +644,7 @@ public class Space {
             System.out.println(text);
         }
         catch (Exception exc){
-            System.out.println("Error: Failed to write to " + dir + "/log.txt.");
-            System.exit(0);
+            throw new RuntimeException("Error: Failed to write to " + dir + "/log.txt.");
         }
     }
     //Appends energy values to energies.txt in dir if staticTemp = true
@@ -694,8 +657,7 @@ public class Space {
                 writer.close();
             }
             catch (Exception exc){
-                System.out.println("Error: Failed to write to " + dir + "/energies.txt.");
-                System.exit(0);
+                throw new RuntimeException("Error: Failed to write to " + dir + "/energies.txt.");
             }
         }
     }
@@ -709,8 +671,7 @@ public class Space {
                 writer.close();
             }
             catch (Exception exc){
-                System.out.println("Error: Failed to write to " + dir + "/acceptance_ratios.txt");
-                System.exit(0);
+                throw new RuntimeException("Error: Failed to write to " + dir + "/acceptance_ratios.txt");
             }
         }
     }
@@ -721,8 +682,7 @@ public class Space {
             Files.copy(new File(dir + "/Output" + minEnergyToothNum + ".xyz").toPath(), new File(writePath).toPath());
         }
         catch (Exception exc){
-            System.out.println("Error: Failed to write to " + dir + "/min_energy_structure" + minEnergyToothNum + ".xyz");
-            System.exit(0);
+            throw new RuntimeException("Error: Failed to write to " + dir + "/min_energy_structure" + minEnergyToothNum + ".xyz");
         }
     }
 
@@ -737,7 +697,23 @@ public class Space {
             writer.close();
         }
         catch (Exception exc){
-            System.out.println("Error: Failed to write to " + dir + "/configurational_heat_capacities.txt");
+            throw new RuntimeException("Error: Failed to write to " + dir + "/configurational_heat_capacities.txt");
+        }
+    }
+
+    public String getDir() {
+        return dir;
+    }
+
+    public void writeExecTime(long procStart) {
+        long procEnd = System.nanoTime();
+        try {
+            String writePath = dir + "/elapsed_time.log";
+            FileWriter writer = new FileWriter(writePath, false);
+            writer.write((procEnd - procStart) + "");
+            writer.close();
+        } catch (Exception exc) {
+            System.err.println("Error: Failed to write to " + dir + "/elapsed_time.log");
             System.exit(1);
         }
     }

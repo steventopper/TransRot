@@ -23,5 +23,5 @@ Write Acceptance Ratios (true/false):                 true
 
 //List of Molecules to be Used
 //Ex: H2O 2 <- 2 Molecules of H2O (separate molecular formula and number with space)
-NH4+ 4
-Cl- 4
+NH4+  4
+Cl-  4
