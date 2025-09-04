@@ -1,6 +1,6 @@
 # TransRot Version 1.8.0
 
-Steven L. Topper and Robert Q. Topper\
+Steven L. Topper, Elliot Topper, and Robert Q. Topper\
 Albert Nerken School of Engineering\
 The Cooper Union \
   for the Advancement of Science and Art\
