@@ -22,13 +22,13 @@ public class Main {
 			Map<String, String> parsedArgs = getArgs(args);
 			s.makeDirectoryName(parsedArgs);
 			s.makeDirectory(parsedArgs);
+			System.out.println("Writing output to: " + s.getDir());
 			s.readDB(parsedArgs.get("dbase"));
 			s.readCFG(parsedArgs.get("config"));
 			s.setupPairVals();
 			if (!s.useInput && parsedArgs.get("inputIncluded").equals("yes")) {
 				throw new RuntimeException("Error: You cannot provide a parameter for --input if \"Use Input.xyz\" is not selected in your config.");
 			}
-			System.out.println("Writing output to: " + s.getDir());
 			if (s.useInput) {
 				//Read molecules from Input.xyz, do not propagate
 				s.readInput(parsedArgs.get("input"));

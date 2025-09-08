@@ -106,7 +106,7 @@ All run parameters are set in config.txt. **VERY IMPORTANT:** Each parameter mus
   
     **Example**: For an Input.xyz file containing 3 ammonium ions, followed by 4 chloride ions, followed by 1 "frozen" ammonium ion, the comment line would be: 
     ```
-    4 NH4+ | 3 Cl- | 1F NH4+
+    3 NH4+ | 4 Cl- | 1F NH4+
     ```
     **Important:** While this option is enabled, Length of Cubic Space will not automatically increase and must be manually set to a proper value.
 - 0K Finale (true/false): Enables the final tooth to repeat itself at a static temperature of 0K. The output file for this tooth replaces the output file for the final tooth, and its movie file will be appended to the final output movie file.
