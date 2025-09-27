@@ -11,6 +11,8 @@ import org.apache.commons.math3.random.MersenneTwister;
 import org.apache.commons.math3.util.Pair;
 import org.apache.commons.math3.util.Precision;
 import java.time.LocalDateTime;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -31,6 +33,7 @@ public class Space {
     double magwalkProbRot;
 
     boolean useInput;
+    boolean useParams;
     boolean extraCycle;
     boolean staticTemp;
     boolean writeEnergiesEnabled;
@@ -225,6 +228,8 @@ public class Space {
                 currLine++;
                 useInput = Boolean.parseBoolean(scanner.nextLine().split(" " + " +")[1]);
                 currLine++;
+                useParams = Boolean.parseBoolean(scanner.nextLine().split(" " + " +")[1]);
+                currLine++;
                 extraCycle = Boolean.parseBoolean(scanner.nextLine().split(" " + " +")[1]);
                 currLine++;
                 staticTemp = Boolean.parseBoolean(scanner.nextLine().split(" " + " +")[1]);
@@ -251,7 +256,7 @@ public class Space {
                     for (int x = 0; x < num; x++) {
                         if (!add(name)) {
                             scanner.close();
-                            throw new RuntimeException("Error on line " + currLine + " in config.txt: Unable to find molecule '" + name + "' in dbase.txt.");
+                            throw new RuntimeException("Error on line " + currLine + " in config.txt: Unable to find particle '" + name + "' in dbase.txt.");
                         }
                     }
                 }
@@ -267,8 +272,8 @@ public class Space {
     }
     public void readInput(String pathName){
         try (Scanner scanner = new Scanner(new File(pathName))) {
-            int currLine = 1; //Tracks current line for error printing
-            //Skip next line, since we don't care about the total number of atoms, we get it all from the comment on the next line
+            int currLine = 1; // Tracks current line for error printing
+            // Skip next line, since we don't care about the total number of atoms, we get it all from the comment on the next line
             String firstLine = scanner.nextLine().trim();
             int numAtoms = Integer.parseInt(firstLine);
             int atomsRead = 0;
@@ -320,6 +325,122 @@ public class Space {
         catch (IOException exc){
             throw new RuntimeException("Error: File " + pathName + " not found.");
         }
+    }
+    public void readParams(String pathName) {
+        String aliasRegex = "^(?<particle>.+) *= *(?<aliases>([A-Za-z0-9-_]+, *)*[A-Za-z0-9-_]+)$";
+        Pattern aliasPattern = Pattern.compile(aliasRegex);
+        String paramRegex = "^(?<firstID>[A-Za-z0-9-_]+) *- *(?<secondID>[A-Za-z0-9-_]+)(?<values>( {2,}\\d+(.\\d+)?){4})$";
+        Pattern paramPattern = Pattern.compile(paramRegex);
+        List<String> aliasedParticles = new ArrayList<>();
+        Map<String, List<Atom>> aliases = new HashMap<>();
+        List<Pair<Pair<String, String>, double[]>> paramsList = new ArrayList<>();
+
+        try (Scanner scanner = new Scanner(new File(pathName))) {
+            int currLine = 1; // Tracks current line for error printing
+            for (String line = scanner.nextLine().trim();; line = scanner.nextLine(), currLine++) {
+                // Skip empty lines
+                if (line.length() == 0) continue;
+                // Parse alias lines (anywhere in the file)
+                Matcher aliasMatcher = aliasPattern.matcher(line);
+                Matcher paramMatcher = paramPattern.matcher(line);
+                if (aliasMatcher.find()) {
+                    String particleName = aliasMatcher.group("particle");
+                    if (aliasedParticles.contains(particleName)) {
+                        scanner.close();
+                        throw new RuntimeException("Error on line " + currLine + " in interaction parameters file: Cannot alias the same particle type twice.");
+                    }
+                    List<String> aliasList = Arrays.stream(aliasMatcher.group("aliases").split(",")).map(String::trim).collect(Collectors.toList());
+                    Molecule aliased = null;
+                    for (Molecule particle : dbase) {
+                        if (particle.name.equals(particleName)) {
+                            aliased = particle;
+                            break;
+                        }
+                    }
+                    if (aliased == null) {
+                        scanner.close();
+                        throw new RuntimeException("Error on line " + currLine + " in interaction parameters file: Aliased particle does not exist.");
+                    }
+                    if (aliased.atoms.size() != aliasList.size()) {
+                        scanner.close();
+                        throw new RuntimeException("Error on line " + currLine + " in interaction parameters file: Number of atom aliases does not match number of atoms defined in the input database.");
+                    }
+
+                    for (int i = 0; i < aliasList.size(); i++) {
+                        String alias = aliasList.get(i);
+                        if (!aliases.containsKey(alias)) {
+                            aliases.put(alias, new ArrayList<>());
+                        }
+                        aliases.get(alias).add(aliased.atoms.get(i));
+                    }
+                    aliasedParticles.add(particleName);
+                }
+                // Parse parameter definition lines
+                else if (paramMatcher.find()) {
+                    String firstID = paramMatcher.group("firstID");
+                    String secondID = paramMatcher.group("secondID");
+                    String[] values = paramMatcher.group("values").trim().split(" {2,}");
+                    paramsList.add(new Pair<>(new Pair<>(firstID, secondID), Arrays.stream(values).mapToDouble(Double::parseDouble).toArray()));
+                }
+                // Otherwise, error
+                else {
+                    scanner.close();
+                    throw new RuntimeException("Error on line " + currLine + " in interaction parameters file: File incorrectly formatted.");
+                }
+                if (!scanner.hasNextLine()) break;
+            }
+        }
+        catch (IOException exc){
+            throw new RuntimeException("Error: File " + pathName + " not found.");
+        }
+
+        // Error if not all particles are aliased
+        if (aliasedParticles.size() != dbase.size()) throw new RuntimeException("Error in interaction parameters file: Must provide aliases for all defined particles in the database.");
+
+        // Error if not all interactions are defined
+        if (paramsList.size() < (aliases.size() * (aliases.size() - 1)) / 2) throw new RuntimeException("Error in interaction parameters file: Not all interactions are defined.");
+
+        HashMap<Pair<UUID, UUID>, double[]> tempDbase = new HashMap<>();
+        for (Pair<Pair<String, String>, double[]> interParams : paramsList) {
+            String firstID = interParams.getFirst().getFirst();
+            String secondID = interParams.getFirst().getSecond();
+            double[] params = interParams.getSecond();
+
+            // If either ID does not exist as an alias, error
+            if (!aliases.containsKey(firstID)) throw new RuntimeException("Error in interaction parameters file: Atom alias '" + firstID + "' not defined in particle alias lists.");
+            if (!aliases.containsKey(secondID)) throw new RuntimeException("Error in interaction parameters file: Atom alias '" + secondID + "' not defined in particle alias lists.");
+
+            for (Atom atom : aliases.get(firstID)) {
+                for (Atom atom2 : aliases.get(secondID)) {
+                    Pair<UUID, UUID> key1 = new Pair<>(atom.uuid, atom2.uuid);
+                    Pair<UUID, UUID> key2 = new Pair<>(atom2.uuid, atom.uuid);
+                    if (tempDbase.containsKey(key1) || tempDbase.containsKey(key2))
+                        throw new RuntimeException("Error in interaction parameters file: Interaction between '" + firstID + "' and '" + secondID + "' cannot be defined twice.");
+
+                    tempDbase.put(key1, params.clone());
+                    tempDbase.put(key2, params.clone());
+                }
+            }
+        }
+
+        // Add interaction parameters for self collisions
+        for (String alias : aliases.keySet()) {
+            for (Atom atom : aliases.get(alias)) {
+                for (Atom atom2 : aliases.get(alias)) {
+                    double A = Math.sqrt(atom.a * atom2.a);
+                    double B = (atom.b + atom2.b) / 2;
+                    double C = Math.sqrt(atom.c * atom2.c);
+                    double D = Math.sqrt(atom.d * atom2.d);
+                    Pair<UUID, UUID> key1 = new Pair<>(atom.uuid, atom2.uuid);
+                    Pair<UUID, UUID> key2 = new Pair<>(atom2.uuid, atom.uuid);
+                    double[] value = {A, B, C, D};
+                    tempDbase.put(key1, value);
+                    tempDbase.put(key2, value);
+                }
+            }
+        }
+
+        pairwiseDbase.putAll(tempDbase);
     }
 
     //Set up pair
