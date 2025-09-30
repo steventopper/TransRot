@@ -29,7 +29,7 @@ public class Main {
 				throw new RuntimeException("Error: You cannot provide a parameter for --input if \"Use Input.xyz\" is not selected in your config.");
 			}
 			if (!s.useParams && parsedArgs.get("paramsIncluded").equals("yes")) {
-				throw new RuntimeException("Error: You cannot provide a parameter for --params if \"Use Interaction Params\" is not selected in your config.");
+				throw new RuntimeException("Error: You cannot provide a parameter for --params if \"Choose Interaction All Parameters\" is not selected in your config.");
 			}
 			if (s.useParams) s.readParams(parsedArgs.get("interactionParams"));
 			else s.setupPairVals();
