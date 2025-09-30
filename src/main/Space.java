@@ -5,6 +5,7 @@ import java.math.RoundingMode;
 import java.net.URLDecoder;
 import java.nio.file.Files;
 import java.security.Security;
+import java.sql.Array;
 import java.util.*;
 
 import org.apache.commons.math3.random.MersenneTwister;
@@ -368,9 +369,7 @@ public class Space {
 
                     for (int i = 0; i < aliasList.size(); i++) {
                         String alias = aliasList.get(i);
-                        if (!aliases.containsKey(alias)) {
-                            aliases.put(alias, new ArrayList<>());
-                        }
+                        aliases.putIfAbsent(alias, new ArrayList<>());
                         aliases.get(alias).add(aliased.atoms.get(i));
                     }
                     aliasedParticles.add(particleName);
@@ -467,7 +466,7 @@ public class Space {
     }
     // creates directory path to be saved to later
     public void makeDirectoryName(Map<String, String> parsedArgs)  {
-        //Get current datetime and create directory name
+        // Get current datetime and create directory name
         LocalDateTime time = LocalDateTime.now();
         String name = time.getYear() + "_" + time.getMonthValue() + "_" + time.getDayOfMonth() + "_" + time.getHour() + "_" + time.getMinute() + "_" + time.getSecond();
         String dirName = parsedArgs.get("output") + "/" + name;
@@ -476,15 +475,16 @@ public class Space {
         if (security != null) security.checkWrite(dirName);
         dir = dirName;
     }
-    //Creates new directory to place output files into
+    // Creates new directory to place output files into
     public void makeDirectory(Map<String, String> parsedArgs){
-        //Get path of object
+        // Get path of object
         try {
             File f = new File(dir);
             if (!f.mkdir()){
                 throw new Exception();
             }
-            //Copy config.txt to new directory;
+
+            // Copy config.txt to new directory;
             Scanner scanner = new Scanner(new File(parsedArgs.get("config")));
             StringBuilder out = new StringBuilder();
             while (scanner.hasNextLine()){
@@ -494,7 +494,8 @@ public class Space {
             FileWriter writer = new FileWriter(copyPath);
             writer.write(out.toString());
             writer.close();
-            if (useInput) { //If enabled, copy Input.xyz to new directory
+
+            if (useInput) { // If enabled, copy Input.xyz to new directory
                 scanner = new Scanner(new File(parsedArgs.get("input")));
                 out = new StringBuilder();
                 while (scanner.hasNextLine()) {
@@ -510,7 +511,142 @@ public class Space {
             throw new RuntimeException("Error: Failed to create new directory.");
         }
     }
-    //Writes atom placements to .xyz file. Programs that read .xyz files will figure out what atoms go to what molecules, so that information is unnecessary
+
+    // Writes interaction parameters for a TransRot run to interaction_params.txt
+    public void writeParams() throws IOException {
+        // First, pairwiseDbase is converted into an adjacency list, which associates
+        // each atom with a map containing all of its interactions
+        Map<UUID, Map<UUID, double[]>> adjList = new HashMap<>();
+        for (Map.Entry<Pair<UUID, UUID>, double[]> pairEntry : pairwiseDbase.entrySet()) {
+            UUID first = pairEntry.getKey().getFirst();
+            UUID second = pairEntry.getKey().getSecond();
+            adjList.putIfAbsent(first, new HashMap<>());
+            adjList.putIfAbsent(second, new HashMap<>());
+            adjList.get(first).put(second, pairEntry.getValue());
+            adjList.get(second).put(first, pairEntry.getValue());
+        }
+
+        // Atoms are grouped by identical adjacency lists into idLists
+        Map<Map<UUID, double[]>, List<UUID>> idLists = new HashMap<>();
+        Map<Map<UUID, double[]>, String> symbols = new HashMap<>();
+        for (Map.Entry<UUID, Map<UUID, double[]>> interactionList : adjList.entrySet()) {
+            // Find atom by UUID
+            Atom atomFromID = null;
+            Molecule parent = null;
+            for (Molecule molecule : dbase) {
+                for (Atom atom : molecule.atoms) {
+                    if (atom.uuid == interactionList.getKey()) {
+                        parent = molecule;
+                        atomFromID = atom;
+                        break;
+                    }
+                }
+                if (atomFromID != null) break;
+            }
+            if (atomFromID == null) return;
+
+            boolean givenID = false;
+            for (Map.Entry<Map<UUID, double[]>, List<UUID>> paramList : idLists.entrySet()) {
+                // Find paramList atom's parent
+                Molecule firstParent = null;
+                for (Molecule molecule : dbase) {
+                    for (Atom atom : molecule.atoms) {
+                        if (atom.uuid == paramList.getValue().get(0)) {
+                            firstParent = molecule;
+                            break;
+                        }
+                    }
+                    if (firstParent != null) break;
+                }
+
+                // The atom is equivalent to other atoms if its interaction parameters are identical
+                // it has the same atomic symbol, and it is from the same particle
+                if (interactionList.getValue().size() == paramList.getKey().size()
+                        && interactionList.getValue().keySet().stream().allMatch(id -> Arrays.equals(interactionList.getValue().get(id), paramList.getKey().get(id)))
+                        && firstParent == parent
+                        && atomFromID.symbol.equals(symbols.get(paramList.getKey()))) {
+                    paramList.getValue().add(interactionList.getKey());
+                    givenID = true;
+                }
+            }
+            // If no matching atom group is found, a new group is started
+            if (!givenID) {
+                idLists.put(interactionList.getValue(), new ArrayList<>(Collections.singletonList(interactionList.getKey())));
+                symbols.put(interactionList.getValue(), atomFromID.symbol);
+            }
+        }
+
+        // Groups are extracted from idLists
+        List<List<UUID>> groups = new ArrayList<>(idLists.values());
+
+        // Sorting is done both within groups and between them so output aliases
+        // are in a logical and readable order
+        List<Atom> atoms1D = dbase.stream().flatMap(mol -> mol.atoms.stream()).collect(Collectors.toList());
+        Map<UUID, Integer> orderMap = new HashMap<>();
+        for (int i = 0; i < atoms1D.size(); i++) {
+            orderMap.put(atoms1D.get(i).uuid, i);
+        }
+        groups.forEach(group -> group.sort(Comparator.comparingInt(orderMap::get)));
+        groups.sort(Comparator.comparingInt(list -> orderMap.get(list.get(0))));
+
+        // Write output string
+        StringBuilder returnStr = new StringBuilder();
+
+        Map<String, Integer> symbolOccurences = new HashMap<>();
+        Map<UUID, String> definedUUIDs = new HashMap<>();
+        // To assign aliases to atoms, the order of definition in dbase.txt is used for consistency
+        for (Molecule molecule : dbase) {
+            List<String> ids = new ArrayList<>();
+            for (Atom atom : molecule.atoms) {
+                String symbol = "";
+                // For each atom, if its alias is already assigned, simply pull out this alias for further use
+                // Otherwise, every atom in its group is assigned an alias id, numerically according to the group's
+                // collective atomic symbol.
+                if (definedUUIDs.containsKey(atom.uuid)) symbol = definedUUIDs.get(atom.uuid);
+                else {
+                    for (List<UUID> group : groups) {
+                        if (group.contains(atom.uuid)) {
+                            String key = atom.symbol.replaceAll("\\*", "");
+                            symbolOccurences.putIfAbsent(key, 0);
+                            symbolOccurences.put(key, symbolOccurences.get(key) + 1);
+                            symbol = key + symbolOccurences.get(key);
+                            for (UUID uuid : group) {
+                                definedUUIDs.put(uuid, symbol);
+                            }
+                            break;
+                        }
+                    }
+                }
+                ids.add(symbol);
+            }
+            // For each molecule, a line is added to the output to define its aliases
+            returnStr.append(molecule.name).append("=").append(String.join(",", ids)).append("\n");
+        }
+        returnStr.append("\n");
+
+        // A final loop iterates through group pairs in order, being careful to not have repeats
+        // For each interaction, a line is added to the output with retrieved symbols and the original interaction parameters
+        for (int i = 0; i < groups.size(); i++) {
+            List<UUID> group1 = groups.get(i);
+            for (int j = i + 1; j < groups.size(); j++) {
+                List<UUID> group2 = groups.get(j);
+                returnStr
+                        .append(definedUUIDs.get(group1.get(0)))
+                        .append("-")
+                        .append(definedUUIDs.get(group2.get(0)))
+                        .append(Arrays.stream(pairwiseDbase.get(new Pair<>(group1.get(0), group2.get(0)))).mapToObj(d -> "  " + d).collect(Collectors.joining("")))
+                        .append("\n");
+            }
+        }
+
+        // Write interaction_params.txt
+        String paramsPath = dir + "/interaction_params.txt";
+        FileWriter writer = new FileWriter(paramsPath);
+        writer.write(returnStr.toString());
+        writer.close();
+    }
+
+    // Writes atom placements to .xyz file. Programs that read .xyz files will figure out what atoms go to what molecules, so that information is unnecessary
     public void write(int outputFileNumber){
         try{
         	String pathName = dir + "/Output" + outputFileNumber + ".xyz"; //dir specified in makeDirectory()

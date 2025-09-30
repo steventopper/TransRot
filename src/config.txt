@@ -14,7 +14,7 @@ Magwalk Rotation Probability:                         0.1
 Length of Cubic Space:                                5.0
 Max Failures During Propagation:                      20
 Use Input.xyz (true/false):                           false
-Choose All Interaction Parameters (true/false):
+Choose All Interaction Parameters (true/false):       false
 0K Finale (true/false):                               false
 Static Temperature (true/false):                      false
 Write Energies When Static Temperature (true/false):  true

@@ -33,6 +33,7 @@ public class Main {
 			}
 			if (s.useParams) s.readParams(parsedArgs.get("interactionParams"));
 			else s.setupPairVals();
+			s.writeParams();
 			if (s.useInput) {
 				//Read molecules from Input.xyz, do not propagate
 				s.readInput(parsedArgs.get("input"));
