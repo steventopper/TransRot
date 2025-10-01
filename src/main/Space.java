@@ -5,12 +5,15 @@ import java.math.RoundingMode;
 import java.net.URLDecoder;
 import java.nio.file.Files;
 import java.security.Security;
+import java.sql.Array;
 import java.util.*;
 
 import org.apache.commons.math3.random.MersenneTwister;
 import org.apache.commons.math3.util.Pair;
 import org.apache.commons.math3.util.Precision;
 import java.time.LocalDateTime;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -31,6 +34,7 @@ public class Space {
     double magwalkProbRot;
 
     boolean useInput;
+    boolean useParams;
     boolean extraCycle;
     boolean staticTemp;
     boolean writeEnergiesEnabled;
@@ -225,6 +229,8 @@ public class Space {
                 currLine++;
                 useInput = Boolean.parseBoolean(scanner.nextLine().split(" " + " +")[1]);
                 currLine++;
+                useParams = Boolean.parseBoolean(scanner.nextLine().split(" " + " +")[1]);
+                currLine++;
                 extraCycle = Boolean.parseBoolean(scanner.nextLine().split(" " + " +")[1]);
                 currLine++;
                 staticTemp = Boolean.parseBoolean(scanner.nextLine().split(" " + " +")[1]);
@@ -251,7 +257,7 @@ public class Space {
                     for (int x = 0; x < num; x++) {
                         if (!add(name)) {
                             scanner.close();
-                            throw new RuntimeException("Error on line " + currLine + " in config.txt: Unable to find molecule '" + name + "' in dbase.txt.");
+                            throw new RuntimeException("Error on line " + currLine + " in config.txt: Unable to find particle '" + name + "' in dbase.txt.");
                         }
                     }
                 }
@@ -267,8 +273,8 @@ public class Space {
     }
     public void readInput(String pathName){
         try (Scanner scanner = new Scanner(new File(pathName))) {
-            int currLine = 1; //Tracks current line for error printing
-            //Skip next line, since we don't care about the total number of atoms, we get it all from the comment on the next line
+            int currLine = 1; // Tracks current line for error printing
+            // Skip next line, since we don't care about the total number of atoms, we get it all from the comment on the next line
             String firstLine = scanner.nextLine().trim();
             int numAtoms = Integer.parseInt(firstLine);
             int atomsRead = 0;
@@ -321,6 +327,120 @@ public class Space {
             throw new RuntimeException("Error: File " + pathName + " not found.");
         }
     }
+    public void readParams(String pathName) {
+        String aliasRegex = "^(?<particle>.+) *= *(?<aliases>([A-Za-z0-9-_]+, *)*[A-Za-z0-9-_]+)$";
+        Pattern aliasPattern = Pattern.compile(aliasRegex);
+        String paramRegex = "^(?<firstID>[A-Za-z0-9-_]+) *- *(?<secondID>[A-Za-z0-9-_]+)(?<values>( {2,}\\d+(.\\d+)?){4})$";
+        Pattern paramPattern = Pattern.compile(paramRegex);
+        List<String> aliasedParticles = new ArrayList<>();
+        Map<String, List<Atom>> aliases = new HashMap<>();
+        List<Pair<Pair<String, String>, double[]>> paramsList = new ArrayList<>();
+
+        try (Scanner scanner = new Scanner(new File(pathName))) {
+            int currLine = 1; // Tracks current line for error printing
+            for (String line = scanner.nextLine().trim();; line = scanner.nextLine(), currLine++) {
+                // Skip empty lines
+                if (line.length() == 0) continue;
+                // Parse alias lines (anywhere in the file)
+                Matcher aliasMatcher = aliasPattern.matcher(line);
+                Matcher paramMatcher = paramPattern.matcher(line);
+                if (aliasMatcher.find()) {
+                    String particleName = aliasMatcher.group("particle");
+                    if (aliasedParticles.contains(particleName)) {
+                        scanner.close();
+                        throw new RuntimeException("Error on line " + currLine + " in interaction parameters file: Cannot alias the same particle type twice.");
+                    }
+                    List<String> aliasList = Arrays.stream(aliasMatcher.group("aliases").split(",")).map(String::trim).collect(Collectors.toList());
+                    Molecule aliased = null;
+                    for (Molecule particle : dbase) {
+                        if (particle.name.equals(particleName)) {
+                            aliased = particle;
+                            break;
+                        }
+                    }
+                    if (aliased == null) {
+                        scanner.close();
+                        throw new RuntimeException("Error on line " + currLine + " in interaction parameters file: Aliased particle does not exist.");
+                    }
+                    if (aliased.atoms.size() != aliasList.size()) {
+                        scanner.close();
+                        throw new RuntimeException("Error on line " + currLine + " in interaction parameters file: Number of atom aliases does not match number of atoms defined in the input database.");
+                    }
+
+                    for (int i = 0; i < aliasList.size(); i++) {
+                        String alias = aliasList.get(i);
+                        aliases.putIfAbsent(alias, new ArrayList<>());
+                        aliases.get(alias).add(aliased.atoms.get(i));
+                    }
+                    aliasedParticles.add(particleName);
+                }
+                // Parse parameter definition lines
+                else if (paramMatcher.find()) {
+                    String firstID = paramMatcher.group("firstID");
+                    String secondID = paramMatcher.group("secondID");
+                    String[] values = paramMatcher.group("values").trim().split(" {2,}");
+                    paramsList.add(new Pair<>(new Pair<>(firstID, secondID), Arrays.stream(values).mapToDouble(Double::parseDouble).toArray()));
+                }
+                // Otherwise, error
+                else {
+                    scanner.close();
+                    throw new RuntimeException("Error on line " + currLine + " in interaction parameters file: File incorrectly formatted.");
+                }
+                if (!scanner.hasNextLine()) break;
+            }
+        }
+        catch (IOException exc){
+            throw new RuntimeException("Error: File " + pathName + " not found.");
+        }
+
+        // Error if not all particles are aliased
+        if (aliasedParticles.size() != dbase.size()) throw new RuntimeException("Error in interaction parameters file: Must provide aliases for all defined particles in the database.");
+
+        // Error if not all interactions are defined
+        if (paramsList.size() < (aliases.size() * (aliases.size() - 1)) / 2) throw new RuntimeException("Error in interaction parameters file: Not all interactions are defined.");
+
+        HashMap<Pair<UUID, UUID>, double[]> tempDbase = new HashMap<>();
+        for (Pair<Pair<String, String>, double[]> interParams : paramsList) {
+            String firstID = interParams.getFirst().getFirst();
+            String secondID = interParams.getFirst().getSecond();
+            double[] params = interParams.getSecond();
+
+            // If either ID does not exist as an alias, error
+            if (!aliases.containsKey(firstID)) throw new RuntimeException("Error in interaction parameters file: Atom alias '" + firstID + "' not defined in particle alias lists.");
+            if (!aliases.containsKey(secondID)) throw new RuntimeException("Error in interaction parameters file: Atom alias '" + secondID + "' not defined in particle alias lists.");
+
+            for (Atom atom : aliases.get(firstID)) {
+                for (Atom atom2 : aliases.get(secondID)) {
+                    Pair<UUID, UUID> key1 = new Pair<>(atom.uuid, atom2.uuid);
+                    Pair<UUID, UUID> key2 = new Pair<>(atom2.uuid, atom.uuid);
+                    if (tempDbase.containsKey(key1) || tempDbase.containsKey(key2))
+                        throw new RuntimeException("Error in interaction parameters file: Interaction between '" + firstID + "' and '" + secondID + "' cannot be defined twice.");
+
+                    tempDbase.put(key1, params.clone());
+                    tempDbase.put(key2, params.clone());
+                }
+            }
+        }
+
+        // Add interaction parameters for self collisions
+        for (String alias : aliases.keySet()) {
+            for (Atom atom : aliases.get(alias)) {
+                for (Atom atom2 : aliases.get(alias)) {
+                    double A = Math.sqrt(atom.a * atom2.a);
+                    double B = (atom.b + atom2.b) / 2;
+                    double C = Math.sqrt(atom.c * atom2.c);
+                    double D = Math.sqrt(atom.d * atom2.d);
+                    Pair<UUID, UUID> key1 = new Pair<>(atom.uuid, atom2.uuid);
+                    Pair<UUID, UUID> key2 = new Pair<>(atom2.uuid, atom.uuid);
+                    double[] value = {A, B, C, D};
+                    tempDbase.put(key1, value);
+                    tempDbase.put(key2, value);
+                }
+            }
+        }
+
+        pairwiseDbase.putAll(tempDbase);
+    }
 
     //Set up pair
     public void setupPairVals(){
@@ -346,7 +466,7 @@ public class Space {
     }
     // creates directory path to be saved to later
     public void makeDirectoryName(Map<String, String> parsedArgs)  {
-        //Get current datetime and create directory name
+        // Get current datetime and create directory name
         LocalDateTime time = LocalDateTime.now();
         String name = time.getYear() + "_" + time.getMonthValue() + "_" + time.getDayOfMonth() + "_" + time.getHour() + "_" + time.getMinute() + "_" + time.getSecond();
         String dirName = parsedArgs.get("output") + "/" + name;
@@ -355,15 +475,16 @@ public class Space {
         if (security != null) security.checkWrite(dirName);
         dir = dirName;
     }
-    //Creates new directory to place output files into
+    // Creates new directory to place output files into
     public void makeDirectory(Map<String, String> parsedArgs){
-        //Get path of object
+        // Get path of object
         try {
             File f = new File(dir);
             if (!f.mkdir()){
                 throw new Exception();
             }
-            //Copy config.txt to new directory;
+
+            // Copy config.txt to new directory;
             Scanner scanner = new Scanner(new File(parsedArgs.get("config")));
             StringBuilder out = new StringBuilder();
             while (scanner.hasNextLine()){
@@ -373,7 +494,8 @@ public class Space {
             FileWriter writer = new FileWriter(copyPath);
             writer.write(out.toString());
             writer.close();
-            if (useInput) { //If enabled, copy Input.xyz to new directory
+
+            if (useInput) { // If enabled, copy Input.xyz to new directory
                 scanner = new Scanner(new File(parsedArgs.get("input")));
                 out = new StringBuilder();
                 while (scanner.hasNextLine()) {
@@ -389,7 +511,142 @@ public class Space {
             throw new RuntimeException("Error: Failed to create new directory.");
         }
     }
-    //Writes atom placements to .xyz file. Programs that read .xyz files will figure out what atoms go to what molecules, so that information is unnecessary
+
+    // Writes interaction parameters for a TransRot run to interaction_params.txt
+    public void writeParams() throws IOException {
+        // First, pairwiseDbase is converted into an adjacency list, which associates
+        // each atom with a map containing all of its interactions
+        Map<UUID, Map<UUID, double[]>> adjList = new HashMap<>();
+        for (Map.Entry<Pair<UUID, UUID>, double[]> pairEntry : pairwiseDbase.entrySet()) {
+            UUID first = pairEntry.getKey().getFirst();
+            UUID second = pairEntry.getKey().getSecond();
+            adjList.putIfAbsent(first, new HashMap<>());
+            adjList.putIfAbsent(second, new HashMap<>());
+            adjList.get(first).put(second, pairEntry.getValue());
+            adjList.get(second).put(first, pairEntry.getValue());
+        }
+
+        // Atoms are grouped by identical adjacency lists into idLists
+        Map<Map<UUID, double[]>, List<UUID>> idLists = new HashMap<>();
+        Map<Map<UUID, double[]>, String> symbols = new HashMap<>();
+        for (Map.Entry<UUID, Map<UUID, double[]>> interactionList : adjList.entrySet()) {
+            // Find atom by UUID
+            Atom atomFromID = null;
+            Molecule parent = null;
+            for (Molecule molecule : dbase) {
+                for (Atom atom : molecule.atoms) {
+                    if (atom.uuid == interactionList.getKey()) {
+                        parent = molecule;
+                        atomFromID = atom;
+                        break;
+                    }
+                }
+                if (atomFromID != null) break;
+            }
+            if (atomFromID == null) return;
+
+            boolean givenID = false;
+            for (Map.Entry<Map<UUID, double[]>, List<UUID>> paramList : idLists.entrySet()) {
+                // Find paramList atom's parent
+                Molecule firstParent = null;
+                for (Molecule molecule : dbase) {
+                    for (Atom atom : molecule.atoms) {
+                        if (atom.uuid == paramList.getValue().get(0)) {
+                            firstParent = molecule;
+                            break;
+                        }
+                    }
+                    if (firstParent != null) break;
+                }
+
+                // The atom is equivalent to other atoms if its interaction parameters are identical
+                // it has the same atomic symbol, and it is from the same particle
+                if (interactionList.getValue().size() == paramList.getKey().size()
+                        && interactionList.getValue().keySet().stream().allMatch(id -> Arrays.equals(interactionList.getValue().get(id), paramList.getKey().get(id)))
+                        && firstParent == parent
+                        && atomFromID.symbol.equals(symbols.get(paramList.getKey()))) {
+                    paramList.getValue().add(interactionList.getKey());
+                    givenID = true;
+                }
+            }
+            // If no matching atom group is found, a new group is started
+            if (!givenID) {
+                idLists.put(interactionList.getValue(), new ArrayList<>(Collections.singletonList(interactionList.getKey())));
+                symbols.put(interactionList.getValue(), atomFromID.symbol);
+            }
+        }
+
+        // Groups are extracted from idLists
+        List<List<UUID>> groups = new ArrayList<>(idLists.values());
+
+        // Sorting is done both within groups and between them so output aliases
+        // are in a logical and readable order
+        List<Atom> atoms1D = dbase.stream().flatMap(mol -> mol.atoms.stream()).collect(Collectors.toList());
+        Map<UUID, Integer> orderMap = new HashMap<>();
+        for (int i = 0; i < atoms1D.size(); i++) {
+            orderMap.put(atoms1D.get(i).uuid, i);
+        }
+        groups.forEach(group -> group.sort(Comparator.comparingInt(orderMap::get)));
+        groups.sort(Comparator.comparingInt(list -> orderMap.get(list.get(0))));
+
+        // Write output string
+        StringBuilder returnStr = new StringBuilder();
+
+        Map<String, Integer> symbolOccurences = new HashMap<>();
+        Map<UUID, String> definedUUIDs = new HashMap<>();
+        // To assign aliases to atoms, the order of definition in dbase.txt is used for consistency
+        for (Molecule molecule : dbase) {
+            List<String> ids = new ArrayList<>();
+            for (Atom atom : molecule.atoms) {
+                String symbol = "";
+                // For each atom, if its alias is already assigned, simply pull out this alias for further use
+                // Otherwise, every atom in its group is assigned an alias id, numerically according to the group's
+                // collective atomic symbol.
+                if (definedUUIDs.containsKey(atom.uuid)) symbol = definedUUIDs.get(atom.uuid);
+                else {
+                    for (List<UUID> group : groups) {
+                        if (group.contains(atom.uuid)) {
+                            String key = atom.symbol.replaceAll("\\*", "");
+                            symbolOccurences.putIfAbsent(key, 0);
+                            symbolOccurences.put(key, symbolOccurences.get(key) + 1);
+                            symbol = key + symbolOccurences.get(key);
+                            for (UUID uuid : group) {
+                                definedUUIDs.put(uuid, symbol);
+                            }
+                            break;
+                        }
+                    }
+                }
+                ids.add(symbol);
+            }
+            // For each molecule, a line is added to the output to define its aliases
+            returnStr.append(molecule.name).append("=").append(String.join(",", ids)).append("\n");
+        }
+        returnStr.append("\n");
+
+        // A final loop iterates through group pairs in order, being careful to not have repeats
+        // For each interaction, a line is added to the output with retrieved symbols and the original interaction parameters
+        for (int i = 0; i < groups.size(); i++) {
+            List<UUID> group1 = groups.get(i);
+            for (int j = i + 1; j < groups.size(); j++) {
+                List<UUID> group2 = groups.get(j);
+                returnStr
+                        .append(definedUUIDs.get(group1.get(0)))
+                        .append("-")
+                        .append(definedUUIDs.get(group2.get(0)))
+                        .append(Arrays.stream(pairwiseDbase.get(new Pair<>(group1.get(0), group2.get(0)))).mapToObj(d -> "  " + d).collect(Collectors.joining("")))
+                        .append("\n");
+            }
+        }
+
+        // Write interaction_params.txt
+        String paramsPath = dir + "/interaction_params.txt";
+        FileWriter writer = new FileWriter(paramsPath);
+        writer.write(returnStr.toString());
+        writer.close();
+    }
+
+    // Writes atom placements to .xyz file. Programs that read .xyz files will figure out what atoms go to what molecules, so that information is unnecessary
     public void write(int outputFileNumber){
         try{
         	String pathName = dir + "/Output" + outputFileNumber + ".xyz"; //dir specified in makeDirectory()

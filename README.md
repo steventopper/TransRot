@@ -84,6 +84,7 @@ The possible command-line parameters are as follows:
 - **-c / --config**: The filepath following this identifier will be used in the place of `config.txt`.
 - **-d / --dbase**: The filepath following this identifier will be used in the place of `dbase.txt`.
 - **-i / --input**: The filepath following this identifier will be used in the place of `Input.xyz`. This option can only be included when ['Use Input.xyz'](#use-input) is true.
+- **-p / --params**: The filepath following this identifier will be used in the place of `interaction_params.txt`. This option can only be included when ['Choose All Interaction Parameters'](#choose-params) is true.
 - **-o / --output**: The path following this identifier should be the location of a directory. The output of the current run of TransRot will be generated in a subfolder of the folder specified here. Defaults to `.` (same directory as Transrot.jar)
 
 ## How to customize run parameters
@@ -111,6 +112,8 @@ All run parameters are set in config.txt. **VERY IMPORTANT:** Each parameter mus
     3 NH4+ | 4 Cl- | 1F NH4+
     ```
     **Important:** While this option is enabled, Length of Cubic Space will not automatically increase and must be manually set to a proper value.
+<a id="choose-params"></a>
+- Choose All Interaction Parameters (true/false): Overrides automatic calculation of pairwise interaction parameters between atoms in a simulation. By default, [A, B, C, and D](#how-to-add-new-molecules-to-the-database) for interactions between any two unlike atoms are calculated using averages; more specifically, B is calculated using a linear average while A, C, and D use a geometric average. The interaction parameters file uses a custom file format, specified in [its own section](#interaction-parameters).
 - 0K Finale (true/false): Enables the final tooth to repeat itself at a static temperature of 0K. The output file for this tooth replaces the output file for the final tooth, and its movie file will be appended to the final output movie file.
 - Static Temperature (true/false): This option is designed to help with determining other values such as Max Translation Distance. When enabled, Number of Teeth and Points per Tooth will be considered as set to 1. During this tooth, the temperature will remain at the starting temperature.
 - Write Energies When Static Temperature (true/false): When Static Temperature is enabled, enabling this option saves the energy of the system to energies.txt after each attempted move. Enabling this option may cause TransRot to run significantly slower.
@@ -121,6 +124,32 @@ All run parameters are set in config.txt. **VERY IMPORTANT:** Each parameter mus
 The particles to be used in the simulation are set at the bottom of config.txt. Each line includes the molecular formula of a particle followed by the number of that particle to be included, separated by **two or more spaces**. The default config.txt contains setup for an ammonium chloride cluster with 4 ammonium ions and 4 chloride ions, as follows:\
 NH4+  4\
 Cl-  4
+
+## Interaction Parameters
+
+If 'Choose All Interaction Parameters' is enabled in the config file, TransRot expects input of a properly-formatted interaction parameter file. This can be done using either the `--params` command-line argument or by having a file named `interaction_params.txt` in the directory using TransRot.
+
+If this option is selected, parameters for **all** interactions between unlike atoms (including all interactions involving [massless interaction points](#massless-interaction-points)) must be explicitly defined.
+This can be achieved with the combination of two standard line formats in the input file:
+- **Alias Lines** - On any lines of the interaction parameter file (likely the beginning of the file such as in the example, but neither position nor order matters), the user must define aliases for every atom in **all** particles defined in the database file.
+An alias line for a particle, defined by the identifier of the particle followed by a `=`, must define identifiers for each atom and massless interaction point defined in the particle, being sure to maintain the order of definition.
+  All atoms which should be treated the same in terms of interactions due to their similar nature in a structure should use the same identifier; otherwise, each atom should receive a unique identifier.
+    - For example, in a system that defines NH4+ and Cl-, the following format may be used for Alias Lines.
+    ```txt
+    NH4+ = N1, H1, H1, H1, H1
+    Cl- = Cl1
+    ```
+    - The standard identifiers used by TransRot in its output are an atom's atomic symbol followed by an identifying number; however, any identifier is accepted as long as it contains only alphanumeric characters, `-`, and `_`.
+- **Parameter Lines** - Every other line in an interaction parameter file (excluding blank lines) should be in the Parameter Line format. Every combination of two different identifiers, as defined in Alias Lines, should be defined exactly once with a Parameter Line. Interactions between atoms with the same identifier use to standard average calculations for their parameters if these differ.
+  - Each Parameter Line shoulddisplay both identifiers in either order, separated by a `-`. After this, A, B, C, and D should be defined as floating-points numbers at least **2 spaces** apart from each other.
+  - For example, in a system that defines NH4+ and Cl-, the following format may be used for Parameter Lines.
+  ```txt
+  N1-H1          0.0                0.0                0.0                0.0
+  N1-Cl1         0.0                0.0                3099.144775        6911464.963
+  H1-Cl1         0.0                0.0                0.0                0.0
+  ```
+
+A full example of interaction_params.txt file can be found [here](./src/interaction_params.txt).
 
 ## How to Add New Molecules to the Database
 

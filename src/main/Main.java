@@ -25,10 +25,15 @@ public class Main {
 			System.out.println("Writing output to: " + s.getDir());
 			s.readDB(parsedArgs.get("dbase"));
 			s.readCFG(parsedArgs.get("config"));
-			s.setupPairVals();
 			if (!s.useInput && parsedArgs.get("inputIncluded").equals("yes")) {
 				throw new RuntimeException("Error: You cannot provide a parameter for --input if \"Use Input.xyz\" is not selected in your config.");
 			}
+			if (!s.useParams && parsedArgs.get("paramsIncluded").equals("yes")) {
+				throw new RuntimeException("Error: You cannot provide a parameter for --params if \"Choose All Interaction Parameters\" is not selected in your config.");
+			}
+			if (s.useParams) s.readParams(parsedArgs.get("interactionParams"));
+			else s.setupPairVals();
+			s.writeParams();
 			if (s.useInput) {
 				//Read molecules from Input.xyz, do not propagate
 				s.readInput(parsedArgs.get("input"));
@@ -81,6 +86,8 @@ public class Main {
 		parsed.put("dbase", pathDir + "/dbase.txt");
 		parsed.put("input", pathDir + "/Input.xyz");
 		parsed.put("inputIncluded", "no");
+		parsed.put("interactionParams", pathDir + "/interaction_params.txt");
+		parsed.put("paramsIncluded", "no");
 
 		for (int i = 0, argsLength = args.length; i < argsLength; i++) {
 			String arg = args[i];
@@ -92,6 +99,11 @@ public class Main {
 					argName = "input";
 					fileType = ".xyz";
 					parsed.put("inputIncluded", "yes");
+				case "-p":
+				case "--params":
+					argName = "interactionParams";
+					fileType = ".txt";
+					parsed.put("paramsIncluded", "yes");
 				case "-d":
 				case "--dbase":
 					if (argName == null) argName = "dbase";
