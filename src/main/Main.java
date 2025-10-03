@@ -1,5 +1,4 @@
 package main;
-import org.apache.commons.math3.random.MersenneTwister;
 import org.apache.commons.math3.util.Pair;
 import org.apache.commons.math3.util.Precision;
 
@@ -12,13 +11,19 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Main {
-    private static final MersenneTwister r = new MersenneTwister();
     public static void main(String[] args) {
     	long procStart = System.nanoTime();
 		Space s = new Space(10);
     	try {
 			long time1 = System.nanoTime();
 			Map<String, String> parsedArgs = getArgs(args);
+			if (parsedArgs.containsKey("seed")) {
+				try {
+					s.setSeed(Long.parseLong(parsedArgs.get("seed")));
+				} catch (NumberFormatException e) {
+					throw new RuntimeException("Error: --set-seed argument must be a valid long value.");
+				}
+			}
 			s.makeDirectoryName(parsedArgs);
 			s.makeDirectory(parsedArgs);
 			System.out.println("Writing output to: " + s.getDir());
@@ -100,9 +105,11 @@ public class Main {
 					parsed.put("inputIncluded", "yes");
 				case "-p":
 				case "--params":
-					argName = "interactionParams";
-					fileType = ".txt";
-					parsed.put("paramsIncluded", "yes");
+					if (argName == null) {
+						argName = "interactionParams";
+						parsed.put("paramsIncluded", "yes");
+					}
+					if (fileType == null) fileType = ".txt";
 				case "-d":
 				case "--dbase":
 					if (argName == null) argName = "dbase";
@@ -131,6 +138,11 @@ public class Main {
 					if (!file.canWrite()) throw new RuntimeException(String.format("Error: Cannot write to directory %s", file.getCanonicalPath()));
 					parsed.put("output", value);
 					break;
+				case "-s":
+				case "--set-seed":
+					i++;
+					parsed.put("seed", args[i]);
+					break;
 				default:
 					if (arg.startsWith("-")) {
 						throw new RuntimeException(String.format("Error: Unknown flag: %s", arg));
@@ -140,7 +152,7 @@ public class Main {
 			}
 		}
 
-		// test existence of all files
+		// test existence of required files
 		File cFile = new File(parsed.get("config"));
 		if (!cFile.exists()) throw new RuntimeException(String.format("Error: File not found: %s", cFile.getCanonicalPath()));
 		File dFile = new File(parsed.get("dbase"));
@@ -166,8 +178,8 @@ public class Main {
     				total++;
     				Molecule m = s.randMolecule(); //Pick a random molecule
 					Pair<Double, Integer> values;
-    				if (r.nextDouble() >= 0.5 && m.atoms.size() > 1) { //If the rotation of m matters (more than 1 atom), 50% for either rotate or translate; otherwise just translate
-                        if (r.nextDouble() >= magwalkProbRot) { //Chance to magwalk from config
+    				if (Space.getR().nextDouble() >= 0.5 && m.atoms.size() > 1) { //If the rotation of m matters (more than 1 atom), 50% for either rotate or translate; otherwise just translate
+                        if (Space.getR().nextDouble() >= magwalkProbRot) { //Chance to magwalk from config
 							values = s.rotate(m, maxRot, t);
                         }
                         else {
@@ -175,7 +187,7 @@ public class Main {
                         }
                     }
                     else{
-                        if (r.nextDouble() >= magwalkProbTrans) { //Chance to magwalk from config
+                        if (Space.getR().nextDouble() >= magwalkProbTrans) { //Chance to magwalk from config
 							values = s.move(m, maxD, t);
                         }
                         else{

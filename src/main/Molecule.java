@@ -1,10 +1,9 @@
 package main;
+import org.apache.commons.math3.util.Pair;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.UUID;
-
-import org.apache.commons.math3.random.MersenneTwister;
-import org.apache.commons.math3.util.Pair;
 
 public class Molecule {
     String name;
@@ -16,7 +15,6 @@ public class Molecule {
     double tempy;
     double tempz;
     double radius;
-    private static final MersenneTwister r = new MersenneTwister();
     ArrayList<Atom> atoms;
     public Molecule(String n, double rad, ArrayList<Atom> a){
         name = n;
@@ -55,8 +53,8 @@ public class Molecule {
     public void rotateTemp(double maxRot){
         if (atoms.size() <= 1) return;
         //Rotation amount as random double from -maxRot to maxRot
-        double rotAmount = (r.nextDouble() - 0.5) * 2 * maxRot;
-        int c = r.nextInt(3); //Choose rotation direction at random
+        double rotAmount = (Space.getR().nextDouble() - 0.5) * 2 * maxRot;
+        int c = Space.getR().nextInt(3); //Choose rotation direction at random
         for (Atom a : atoms){ //Move atoms around center of molecule based on x, y, or z rotations
             a.x -= x;
             a.y -= y;

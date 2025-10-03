@@ -61,6 +61,15 @@ public class Space {
         dbase = new ArrayList<>();
         pairwiseDbase = new HashMap<>();
     }
+
+    public void setSeed(long s) {
+        r.setSeed(s);
+    }
+
+    public static MersenneTwister getR() {
+        return r;
+    }
+
     //Adds molecule to space from config file string
     public boolean add(String s){ //Adds larger molecules to be placed first, to lower chance of overlap later
         int c = 0;
