@@ -1,4 +1,5 @@
 package main;
+import org.apache.commons.math3.random.MersenneTwister;
 import org.apache.commons.math3.util.Pair;
 
 import java.util.ArrayList;
@@ -6,6 +7,9 @@ import java.util.HashMap;
 import java.util.UUID;
 
 public class Molecule {
+
+    private static final MersenneTwister r = new MersenneTwister(); // Used instead of Java.Random for greater accuracy in randomization
+
     String name;
     double x;
     double y;
@@ -36,6 +40,11 @@ public class Molecule {
         }
         resetTemps();
     }
+
+    public static void setSeed(long seed) {
+        r.setSeed(seed);
+    }
+
     //Moves molecule to x,y,z position
     public void put(double x, double y, double z){
         this.x = x;
@@ -53,8 +62,8 @@ public class Molecule {
     public void rotateTemp(double maxRot){
         if (atoms.size() <= 1) return;
         //Rotation amount as random double from -maxRot to maxRot
-        double rotAmount = (Space.getR().nextDouble() - 0.5) * 2 * maxRot;
-        int c = Space.getR().nextInt(3); //Choose rotation direction at random
+        double rotAmount = (r.nextDouble() - 0.5) * 2 * maxRot;
+        int c = r.nextInt(3); //Choose rotation direction at random
         for (Atom a : atoms){ //Move atoms around center of molecule based on x, y, or z rotations
             a.x -= x;
             a.y -= y;

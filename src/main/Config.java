@@ -32,6 +32,7 @@ public class Config {
     public static int eqConfigs;
     public static boolean writeAcceptanceRatios;
 
+    // VarType uses RegEx to validate the type of an input value
     public enum VarType {
         INT("^\\d+$"), DOUBLE("^\\d+\\.\\d+$"), BOOLEAN("^(true|false)$");
 
@@ -46,7 +47,7 @@ public class Config {
         }
     }
 
-    private static List<String> varNames = Arrays.asList(
+    private static final List<String> varNames = Arrays.asList(
         "Max Temperature",
         "Moves per Point",
         "Points per Tooth",
@@ -69,7 +70,7 @@ public class Config {
         "Number of Equilibration Configurations",
         "Write Acceptance Ratios"
     );
-    private static List<VarType> types = Arrays.asList(
+    private static final List<VarType> types = Arrays.asList(
         VarType.DOUBLE, // Max Temperature
         VarType.INT, // Moves per Point
         VarType.INT, // Points per Tooth
@@ -92,25 +93,35 @@ public class Config {
         VarType.INT, // Number of Equilibration Configurations
         VarType.BOOLEAN // Write Acceptance Ratios
     );
-    private static Map<String, VarType> varTypes = varNames.stream().collect(Collectors.toMap(
+    private static final Map<String, VarType> varTypes = varNames.stream().collect(Collectors.toMap(
         varName -> varName,
         varName -> types.get(varNames.indexOf(varName))
     ));
 
+    // Parses a valid configuration .txt file
     public static void parseConfig(String filename, Space s) {
-        String settingRegex = "^(?<setting>.+): {2,}(?<value>.+)$";
+        // Regex is used for line matching for more specific error management
+        String settingRegex = "^(?<setting>.+): +(?<value>.+)$";
         Pattern settingPattern = Pattern.compile(settingRegex);
         String particleRegex = "^(?<particle>(\\S+\\s?)+) {2,}(?<count>\\d+)$";
         Pattern particlePattern = Pattern.compile(particleRegex);
+
+        // Config settings are stored first, and then propagated into variables
         Map<String, String> configValues = new HashMap<>();
         List<String> addedParticles = new ArrayList<>();
+
+        // A try-with-resources block automatically closes the scanner before exiting the method
         try (Scanner scanner = new Scanner(new File(filename))) {
             int currLine = 1;
             boolean finishedSettings = false;
+            // All lines are trimmed, so leading or trailing space is insignificant
             for (String line = scanner.nextLine().trim();; line = scanner.nextLine(), currLine++) {
                 Matcher settingMatcher = settingPattern.matcher(line);
                 Matcher particleMatcher = particlePattern.matcher(line);
+
+                // Skip commas and empty lines
                 if (line.startsWith("//") || line.length() == 0);
+                // Config settings must all be present, in any order in the file
                 else if (settingMatcher.find()) {
                     if (finishedSettings)
                         throw new RuntimeException("Error on line " + currLine + " in config file: Particle counts must be defined after all configuration settings in configuration file.");
@@ -118,6 +129,8 @@ public class Config {
                     String settingName = settingMatcher.group("setting");
                     String value = settingMatcher.group("value");
                     settingName = settingName.split("\\([a-zA-Z0-9/_-]+\\)")[0].trim();
+
+                    // No new settings are allowed, and all settings must be of the specified type
                     if (!varNames.contains(settingName))
                         throw new RuntimeException("Error on line " + currLine + " in config file: Configuration setting '" + settingName + "' not expected.");
 
@@ -125,6 +138,7 @@ public class Config {
                         throw new RuntimeException("Error on line " + currLine + " in config file: Unexpected type for '" + settingName + "' configuration");
 
                     configValues.put(settingName, value);
+                // Particle counts are directly added to the Space if valid
                 } else if (particleMatcher.find()) {
                     finishedSettings = true;
                     String name = particleMatcher.group("particle");
@@ -154,6 +168,7 @@ public class Config {
         setVars(configValues);
     }
 
+    // Sets all static configuration variables for ease of use in other classes
     private static void setVars(Map<String, String> values) {
         maxTemp = Double.parseDouble(values.get("Max Temperature"));
         movePerPt = Integer.parseInt(values.get("Moves per Point"));

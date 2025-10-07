@@ -28,7 +28,7 @@ public class Space {
     private final ArrayList<Molecule> moveableMolecules;
     private final ArrayList<Molecule> dbase;
     private final HashMap<Pair<UUID, UUID>, double[]> pairwiseDbase;
-    private static final MersenneTwister r = new MersenneTwister(); //Used instead of Java.Random for greater accuracy in randomization
+    private static final MersenneTwister r = new MersenneTwister(); // Used instead of Java.Random for greater accuracy in randomization
     static final double BOLTZMANN_CONSTANT = 0.0019872;
     public Space(){
         list = new ArrayList<>();
@@ -38,12 +38,8 @@ public class Space {
         pairwiseDbase = new HashMap<>();
     }
 
-    public void setSeed(long s) {
-        r.setSeed(s);
-    }
-
-    public static MersenneTwister getR() {
-        return r;
+    public static void setSeed(long seed) {
+        r.setSeed(seed);
     }
 
     //Adds molecule to space from config file string
@@ -254,9 +250,9 @@ public class Space {
                 // Parse alias lines (anywhere in the file)
                 else if (aliasMatcher.find()) {
                     String particleName = aliasMatcher.group("particle");
-                    if (aliasedParticles.contains(particleName)) {
+                    if (aliasedParticles.contains(particleName))
                         throw new RuntimeException("Error on line " + currLine + " in interaction parameters file: Cannot alias the same particle type twice.");
-                    }
+
                     List<String> aliasList = Arrays.stream(aliasMatcher.group("aliases").split(",")).map(String::trim).collect(Collectors.toList());
                     Molecule aliased = null;
                     for (Molecule particle : dbase) {

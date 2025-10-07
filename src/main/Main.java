@@ -1,4 +1,5 @@
 package main;
+import org.apache.commons.math3.random.MersenneTwister;
 import org.apache.commons.math3.util.Pair;
 import org.apache.commons.math3.util.Precision;
 
@@ -11,6 +12,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Main {
+	private static final MersenneTwister r = new MersenneTwister(); // Used instead of Java.Random for greater accuracy in randomization
+
     public static void main(String[] args) {
     	long procStart = System.nanoTime();
 		Space s = new Space();
@@ -19,7 +22,11 @@ public class Main {
 			Map<String, String> parsedArgs = getArgs(args);
 			if (parsedArgs.containsKey("seed")) {
 				try {
-					s.setSeed(Long.parseLong(parsedArgs.get("seed")));
+					MersenneTwister seedGenerator = new MersenneTwister();
+					seedGenerator.setSeed(Long.parseLong(parsedArgs.get("seed")));
+					setSeed(seedGenerator.nextLong());
+					Space.setSeed(seedGenerator.nextLong());
+					Molecule.setSeed(seedGenerator.nextLong());
 				} catch (NumberFormatException e) {
 					throw new RuntimeException("Error: --set-seed argument must be a valid long value.");
 				}
@@ -184,8 +191,8 @@ public class Main {
     				total++;
     				Molecule m = s.randMolecule(); //Pick a random molecule
 					Pair<Double, Integer> values;
-    				if (Space.getR().nextDouble() >= 0.5 && m.atoms.size() > 1) { //If the rotation of m matters (more than 1 atom), 50% for either rotate or translate; otherwise just translate
-                        if (Space.getR().nextDouble() >= magwalkProbRot) { //Chance to magwalk from config
+    				if (r.nextDouble() >= 0.5 && m.atoms.size() > 1) { //If the rotation of m matters (more than 1 atom), 50% for either rotate or translate; otherwise just translate
+                        if (r.nextDouble() >= magwalkProbRot) { //Chance to magwalk from config
 							values = s.rotate(m, maxRot, t);
                         }
                         else {
@@ -193,7 +200,7 @@ public class Main {
                         }
                     }
                     else{
-                        if (Space.getR().nextDouble() >= magwalkProbTrans) { //Chance to magwalk from config
+                        if (r.nextDouble() >= magwalkProbTrans) { //Chance to magwalk from config
 							values = s.move(m, maxD, t);
                         }
                         else{
@@ -249,6 +256,11 @@ public class Main {
 			s.writeMinEnergy();
 		}
     }
+
+	public static void setSeed(long seed) {
+		r.setSeed(seed);
+	}
+
     public static String timestamp(long time1, long time2){
     	String ret = "";
 		float runtime = (time2 - time1) / 1000000000f;

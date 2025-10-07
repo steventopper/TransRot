@@ -89,7 +89,7 @@ The possible command-line parameters are as follows:
 
 ## How to customize run parameters
 
-All run parameters are set in config.txt. **VERY IMPORTANT:** Each parameter must be separated from its label by a colon followed by **at least 2 spaces**.
+All run parameters are set in the specified configuration file, or `config.txt`.
 
 - Max Temperature (K): Starting temperature of the annealing process, from which the cluster will be cooled down to 0K in the first cooling cycle.
 - Moves per Point: Number of attempted translations or rotations per temperature segment.
@@ -121,7 +121,7 @@ All run parameters are set in config.txt. **VERY IMPORTANT:** Each parameter mus
 - Number of Equilibration Configurations: When Static Temperature and Write Configurational Heat Capacities are both enabled, the first N energies will not be considered in the configurational heat capacity, where N is the value set for Number of Equilibration Configurations.
 - Write Acceptance Ratios (true/false): This option is designed to help with determining other values such as Max Translation Distance. When enabled, the ratio of accepted moves for each temperature point will be written to "acceptance_ratios.txt", along with the corresponding temperature in degrees Kelvin.
     
-The particles to be used in the simulation are set at the bottom of config.txt. Each line includes the molecular formula of a particle followed by the number of that particle to be included, separated by **two or more spaces**. The default config.txt contains setup for an ammonium chloride cluster with 4 ammonium ions and 4 chloride ions, as follows:\
+The particles to be used in the simulation are set at the bottom of the configuration file. Each line includes the molecular formula of a particle followed by the number of that particle to be included, separated by **two or more spaces**. The default config.txt contains setup for an ammonium chloride cluster with 4 ammonium ions and 4 chloride ions, as follows:\
 NH4+  4\
 Cl-  4
 
