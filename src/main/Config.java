@@ -34,7 +34,7 @@ public class Config {
 
     // VarType uses RegEx to validate the type of an input value
     public enum VarType {
-        INT("^\\d+$"), DOUBLE("^\\d+\\.\\d+$"), BOOLEAN("^(true|false)$");
+        INT("^\\d+$"), DOUBLE("^\\d+(\\.\\d+)?$"), BOOLEAN("^(true|false)$");
 
         private final String regex;
 
@@ -115,7 +115,7 @@ public class Config {
             int currLine = 1;
             boolean finishedSettings = false;
             // All lines are trimmed, so leading or trailing space is insignificant
-            for (String line = scanner.nextLine().trim();; line = scanner.nextLine(), currLine++) {
+            for (String line = scanner.nextLine().trim();; line = scanner.nextLine().trim(), currLine++) {
                 Matcher settingMatcher = settingPattern.matcher(line);
                 Matcher particleMatcher = particlePattern.matcher(line);
 

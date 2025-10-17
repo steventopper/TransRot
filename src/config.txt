@@ -1,5 +1,4 @@
-//Sawtooth Annealing Configuration Options
-//Use 2 or more spaces between label and value
+// Sawtooth Annealing Configuration Options
 Max Temperature (K):                                  10000.0
 Moves per Point:                                      20000
 Points per Tooth:                                     10
@@ -22,7 +21,8 @@ Write Configurational Heat Capacities (true/false):   true
 Number of Equilibration Configurations:               1000
 Write Acceptance Ratios (true/false):                 true
 
-//List of Molecules to be Used
-//Ex: H2O 2 <- 2 Molecules of H2O (separate molecular formula and number with space)
+
+// List of Molecules to be Used
+// Ex: H2O 2 <- 2 Molecules of H2O (separate molecular formula and number with space)
 NH4+  4
 Cl-  4

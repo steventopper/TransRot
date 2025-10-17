@@ -117,59 +117,104 @@ public class Space {
     }
     //Reads molecules from dbase.txt
     public void readDB(String pathName){
-    	try {
-            Scanner scanner = new Scanner(new File(pathName));
-            int currLine = 0; //Used to print line during error detection
-            while (scanner.hasNextLine()){
-                //Parse file based on expected file format; if an issue is encountered, assume the file is improperly set up and throw an error
+        String[] regex = {
+            "^\\d+$",
+            "^(?<pname>.+?) {2,}(?<radius>\\d+(.\\d+)?)$",
+            "^(?<aname>[A-Za-z0-9*_-]+)(?<vars>( {2,}-?\\d+(.\\d+)?){8} {2,}\\d+(.\\d+)?)+$"
+        };
+        Pattern[] patterns = Arrays.stream(regex).map(Pattern::compile).toArray(Pattern[]::new);
+        List<String> partNames = new ArrayList<>();
+    	try (Scanner scanner = new Scanner(new File(pathName))) {
+            int currLine = 1;
+            String line;
+            while (scanner.hasNextLine()) {
                 try {
-                    String[] words = scanner.nextLine().split(" " + " +");
+                    do { line = scanner.nextLine().trim(); } while (line.startsWith("//") || line.length() == 0);
+                    Matcher countMatch = patterns[0].matcher(line);
+                    if (!countMatch.find())
+                        throw new RuntimeException("Error in line " + currLine + " of database file: Expected atom count.");
+                    int atomCount = Integer.parseInt(countMatch.group());
                     currLine++;
-                    if (words.length == 1) {
-                        int n;
-                        try {
-                            n = Integer.parseInt(words[0]);
-                        } catch (Exception exc) {
-                            throw new IOException();
-                        }
-                        ArrayList<Atom> atoms = new ArrayList<>();
-                        if (!scanner.hasNextLine()) {
-                            throw new IOException();
-                        }
-                        String[] s = scanner.nextLine().split(" " + " +");
+
+                    do { line = scanner.nextLine().trim(); } while (line.startsWith("//") || line.length() == 0);
+                    Matcher nameMatch = patterns[1].matcher(line);
+                    if (!nameMatch.find())
+                        throw new RuntimeException("Error in line " + currLine + " of database file: Unexpected format for particle definition.");
+                    String partName = nameMatch.group("pname");
+                    if (partNames.contains(partName))
+                        throw new RuntimeException("Error in line " + currLine + " of database file: Particle identifiers must be unique.");
+                    partNames.add(partName);
+                    double radius = Double.parseDouble(nameMatch.group("radius"));
+                    currLine++;
+
+                    int nGhosts = 0;
+                    List<Atom> atoms = new ArrayList<>();
+                    for (int i = 0; i < atomCount; i++) {
+                        do { line = scanner.nextLine().trim(); } while (line.startsWith("//") || line.length() == 0);
+                        Matcher atomMatch = patterns[2].matcher(line);
+                        if (!atomMatch.find())
+                            throw new RuntimeException("Error in line " + currLine + " of database file: Unexpected format for atom definition.");
+                        String atomName = atomMatch.group("aname");
+                        double[] params = Arrays.stream(atomMatch.group("vars").trim().split(" {2,}")).mapToDouble(Double::parseDouble).toArray();
+                        if (atomName.contains("*")) nGhosts++;
+                        if (nGhosts == atomCount)
+                            throw new RuntimeException("Error in line " + currLine + " of database file: A particle may not be comprised of only ghost atoms.");
+                        Atom a = new Atom(atomName, params);
+                        atoms.add(a);
                         currLine++;
-                        if (s.length != 2) {
-                            throw new IOException();
-                        }
-                        double radius = Double.parseDouble(s[1]);
-                        String name = s[0];
-                        int numGhosts = 0;
-                        for (int x = 0; x < n; x++) {
-                            String[] atom = scanner.nextLine().split(" " + " +");
-                            currLine++;
-                            if (atom.length != 10) {
-                                throw new IOException();
-                            }
-                            Atom a = new Atom(atom[0], Double.parseDouble(atom[1]), Double.parseDouble(atom[2]), Double.parseDouble(atom[3]), Double.parseDouble(atom[4]), Double.parseDouble(atom[5]), Double.parseDouble(atom[6]), Double.parseDouble(atom[7]), Double.parseDouble(atom[8]), Double.parseDouble(atom[9]));
-                            atoms.add(a);
-                            if (a.symbol.contains("*")){
-                                numGhosts++;
-                            }
-                        }
-                        if (numGhosts == n){
-                            throw new RuntimeException("Error on line " + currLine + " in dbase.txt: Molecule " + name + " cannot be comprised of only ghost atoms.");
-                        }
-                        Molecule m = new Molecule(name, radius, atoms);
-                        dbase.add(m);
                     }
+                    Molecule m = new Molecule(partName, radius, atoms);
+                    dbase.add(m);
+                } catch (NoSuchElementException ignored) {
+                    throw new RuntimeException("Error in line " + currLine + " of database file: Unexpected end of file.");
                 }
-                catch (IOException exc){
-                    scanner.close();
-                    throw new RuntimeException("Error on line " + currLine + " in dbase.txt: File incorrectly formatted.");
-                }
+                // Parse file based on expected file format; if an issue is encountered, assume the file is improperly set up and throw an error
+//                try {
+//                    String[] words = scanner.nextLine().split(" " + " +");
+//                    currLine++;
+//                    if (words.length == 1) {
+//                        int n;
+//                        try {
+//                            n = Integer.parseInt(words[0]);
+//                        } catch (Exception exc) {
+//                            throw new IOException();
+//                        }
+//                        ArrayList<Atom> atoms = new ArrayList<>();
+//                        if (!scanner.hasNextLine()) {
+//                            throw new IOException();
+//                        }
+//                        String[] s = scanner.nextLine().split(" " + " +");
+//                        currLine++;
+//                        if (s.length != 2) {
+//                            throw new IOException();
+//                        }
+//                        double radius = Double.parseDouble(s[1]);
+//                        String name = s[0];
+//                        int numGhosts = 0;
+//                        for (int x = 0; x < n; x++) {
+//                            String[] atom = scanner.nextLine().split(" " + " +");
+//                            currLine++;
+//                            if (atom.length != 10) {
+//                                throw new IOException();
+//                            }
+//                            Atom a = new Atom(atom[0], Double.parseDouble(atom[1]), Double.parseDouble(atom[2]), Double.parseDouble(atom[3]), Double.parseDouble(atom[4]), Double.parseDouble(atom[5]), Double.parseDouble(atom[6]), Double.parseDouble(atom[7]), Double.parseDouble(atom[8]), Double.parseDouble(atom[9]));
+//                            atoms.add(a);
+//                            if (a.symbol.contains("*")){
+//                                numGhosts++;
+//                            }
+//                        }
+//                        if (numGhosts == n){
+//                            throw new RuntimeException("Error on line " + currLine + " in dbase.txt: Molecule " + name + " cannot be comprised of only ghost atoms.");
+//                        }
+//                        Molecule m = new Molecule(name, radius, atoms);
+//                        dbase.add(m);
+//                    }
+//                }
+//                catch (IOException exc){
+//                    throw new RuntimeException("Error on line " + currLine + " in dbase.txt: File incorrectly formatted.");
+//                }
             }
-            scanner.close();
-    	}
+        }
     	catch (IOException exc) {
     		throw new RuntimeException("Error: File " + pathName + " not found.");
     	}
@@ -242,7 +287,7 @@ public class Space {
 
         try (Scanner scanner = new Scanner(new File(pathName))) {
             int currLine = 1; // Tracks current line for error printing
-            for (String line = scanner.nextLine().trim();; line = scanner.nextLine(), currLine++) {
+            for (String line = scanner.nextLine().trim();; line = scanner.nextLine().trim(), currLine++) {
                 Matcher aliasMatcher = aliasPattern.matcher(line);
                 Matcher paramMatcher = paramPattern.matcher(line);
                 // Skip empty lines
