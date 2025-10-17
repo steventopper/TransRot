@@ -86,6 +86,7 @@ The possible command-line parameters are as follows:
 - **-i / --input**: The filepath following this identifier will be used in the place of `Input.xyz`. This option can only be included when ['Use Input.xyz'](#use-input) is true.
 - **-p / --params**: The filepath following this identifier will be used in the place of `interaction_params.txt`. This option can only be included when ['Choose All Interaction Parameters'](#choose-params) is true.
 - **-o / --output**: The path following this identifier should be the location of a directory. The output of the current run of TransRot will be generated in a subfolder of the folder specified here. Defaults to `.` (same directory as Transrot.jar)
+- **-s / --set-seed**: This argument expects a long (integer) value, which is used to seed the parent Mersenne Twister (random number generator) instance. Using `--set-seed` allows for reproducible TransRot simulations.
 
 ## How to customize run parameters
 
