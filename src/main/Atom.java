@@ -49,6 +49,25 @@ public class Atom {
         this.mass = mass;
         this.kTimesQ = K_VALUE * q;
     }
+
+    public Atom(String s, double... params){
+        this.uuid = UUID.randomUUID();
+        symbol = s;
+        this.x = params[0];
+        this.y = params[1];
+        this.z = params[2];
+        defX = x;
+        defY = y;
+        defZ = z;
+        resetTemps();
+        a = params[3];
+        b = params[4];
+        c = params[5];
+        d = params[6];
+        q = params[7];
+        this.mass = params[8];
+        this.kTimesQ = K_VALUE * q;
+    }
     //For copying molecules from database List object, called by Molecule.Molecule(Molecule m)
     public Atom (Atom atom){
         this.uuid = atom.uuid;

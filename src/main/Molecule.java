@@ -1,12 +1,17 @@
 package main;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.UUID;
 
 import org.apache.commons.math3.random.MersenneTwister;
 import org.apache.commons.math3.util.Pair;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.UUID;
+
 public class Molecule {
+
+    private static final MersenneTwister r = new MersenneTwister(); // Used instead of Java.Random for greater accuracy in randomization
+
     String name;
     double x;
     double y;
@@ -16,9 +21,8 @@ public class Molecule {
     double tempy;
     double tempz;
     double radius;
-    private static final MersenneTwister r = new MersenneTwister();
-    ArrayList<Atom> atoms;
-    public Molecule(String n, double rad, ArrayList<Atom> a){
+    List<Atom> atoms;
+    public Molecule(String n, double rad, List<Atom> a){
         name = n;
         radius = rad;
         atoms = a;
@@ -38,6 +42,11 @@ public class Molecule {
         }
         resetTemps();
     }
+
+    public static void setSeed(long seed) {
+        r.setSeed(seed);
+    }
+
     //Moves molecule to x,y,z position
     public void put(double x, double y, double z){
         this.x = x;

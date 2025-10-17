@@ -1,46 +1,21 @@
 package main;
-import java.io.*;
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.net.URLDecoder;
-import java.nio.file.Files;
-import java.security.Security;
-import java.sql.Array;
-import java.util.*;
-
 import org.apache.commons.math3.random.MersenneTwister;
 import org.apache.commons.math3.util.Pair;
 import org.apache.commons.math3.util.Precision;
+
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.nio.file.Files;
 import java.time.LocalDateTime;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class Space {
-    //All set in config.txt
-    double size;
-    private int maxPropFailures;
-    double maxTemperature;
-    int movePerPoint;
-    int pointsPerTooth;
-    int pointIncrement;
-    int numTeeth;
-    double tempDecreasePerTooth;
-    double maxTransDist;
-    double maxRotDegree;
-    double magwalkFactorTrans;
-    double magwalkProbTrans;
-    double magwalkProbRot;
-
-    boolean useInput;
-    boolean useParams;
-    boolean extraCycle;
-    boolean staticTemp;
-    boolean writeEnergiesEnabled;
-    boolean writeConfHeatCapacitiesEnabled;
-    int eqConfigs;
-    boolean writeAcceptanceRatios;
 
     private String dir; //Directory of .xyz files to be saved in, created at runtime
 
@@ -53,46 +28,55 @@ public class Space {
     private final ArrayList<Molecule> moveableMolecules;
     private final ArrayList<Molecule> dbase;
     private final HashMap<Pair<UUID, UUID>, double[]> pairwiseDbase;
-    private static final MersenneTwister r = new MersenneTwister(); //Used instead of Java.Random for greater accuracy in randomization
+    private static final MersenneTwister r = new MersenneTwister(); // Used instead of Java.Random for greater accuracy in randomization
     static final double BOLTZMANN_CONSTANT = 0.0019872;
-    public Space(double s){
-        size = s;
+    public Space(){
         list = new ArrayList<>();
         space = new ArrayList<>();
         moveableMolecules = new ArrayList<>();
         dbase = new ArrayList<>();
         pairwiseDbase = new HashMap<>();
     }
+
+    public static void setSeed(long seed) {
+        r.setSeed(seed);
+    }
+
     //Adds molecule to space from config file string
     public boolean add(String s){ //Adds larger molecules to be placed first, to lower chance of overlap later
-        int c = 0;
         for (Molecule a : dbase){
             if (a.name.equals(s)){
                 Molecule m = new Molecule(a);
-                while (c < list.size()){
-                    if (m.radius > list.get(c).radius){ //If radius of m larger than radius of checked molecule, place m before checked molecule
-                        list.add(c, new Molecule(m));
+                for (int n = 0; n < list.size(); n++){
+                    if (m.radius > list.get(n).radius){ //If radius of m larger than radius of checked molecule, place m before checked molecule
+                        list.add(n, m);
                         return true;
                     }
-                    c++;
                 }
-                if (c == list.size()){ //If m smaller than all other molecules, place m last in list
-                    list.add(list.size(), m);
-                    return true;
-                }
+                list.add(m);
+                return true;
             }
         }
         return false;
     }
+
+    // Adds multiple instances of the same particle to the space
+    public boolean add(String s, int n) {
+        for (int i = 0; i < n; i++) {
+            if (!add(s)) return false;
+        }
+        return true;
+    }
+
     //Places molecules in list into space with random positions and rotations
     public boolean propagate(){
         for (Molecule m : list){
             int c = 0;
             while (true) {
                 //Determine random position
-                double x = (r.nextDouble() * size) - (size / 2);
-                double y = (r.nextDouble() * size) - (size / 2);
-                double z = (r.nextDouble() * size) - (size / 2);
+                double x = (r.nextDouble() * Config.spaceLen) - (Config.spaceLen / 2);
+                double y = (r.nextDouble() * Config.spaceLen) - (Config.spaceLen / 2);
+                double z = (r.nextDouble() * Config.spaceLen) - (Config.spaceLen / 2);
                 if (space.isEmpty()){ //If placing first molecule, no reason to do comparisons, just place the molecule
                     m.put(x, y, z);
                     space.add(m);
@@ -116,7 +100,7 @@ public class Space {
                     moveableMolecules.add(m);
                     break;
                 }
-                if (c >= maxPropFailures){ //Need larger space to place molecules
+                if (c >= Config.maxPropFailures){ //Need larger space to place molecules
                 	space.clear();
                 	moveableMolecules.clear();
                     return false;
@@ -133,144 +117,64 @@ public class Space {
     }
     //Reads molecules from dbase.txt
     public void readDB(String pathName){
-    	try {
-            Scanner scanner = new Scanner(new File(pathName));
-            int currLine = 0; //Used to print line during error detection
-            while (scanner.hasNextLine()){
-                //Parse file based on expected file format; if an issue is encountered, assume the file is improperly set up and throw an error
+        String[] regex = {
+            "^\\d+$",
+            "^(?<pname>.+?) {2,}(?<radius>\\d+(.\\d+)?)$",
+            "^(?<aname>[A-Za-z0-9*_-]+)(?<vars>( {2,}-?\\d+(.\\d+)?){8} {2,}\\d+(.\\d+)?)+$"
+        };
+        Pattern[] patterns = Arrays.stream(regex).map(Pattern::compile).toArray(Pattern[]::new);
+        List<String> partNames = new ArrayList<>();
+    	try (Scanner scanner = new Scanner(new File(pathName))) {
+            int currLine = 1;
+            String line;
+            while (scanner.hasNextLine()) {
                 try {
-                    String[] words = scanner.nextLine().split(" " + " +");
+                    do { line = scanner.nextLine().trim(); } while (line.startsWith("//") || line.length() == 0);
+                    Matcher countMatch = patterns[0].matcher(line);
+                    if (!countMatch.find())
+                        throw new RuntimeException("Error in line " + currLine + " of database file: Expected atom count.");
+                    int atomCount = Integer.parseInt(countMatch.group());
                     currLine++;
-                    if (words.length == 1) {
-                        int n;
-                        try {
-                            n = Integer.parseInt(words[0]);
-                        } catch (Exception exc) {
-                            throw new IOException();
-                        }
-                        ArrayList<Atom> atoms = new ArrayList<>();
-                        if (!scanner.hasNextLine()) {
-                            throw new IOException();
-                        }
-                        String[] s = scanner.nextLine().split(" " + " +");
+
+                    do { line = scanner.nextLine().trim(); } while (line.startsWith("//") || line.length() == 0);
+                    Matcher nameMatch = patterns[1].matcher(line);
+                    if (!nameMatch.find())
+                        throw new RuntimeException("Error in line " + currLine + " of database file: Unexpected format for particle definition.");
+                    String partName = nameMatch.group("pname");
+                    if (partNames.contains(partName))
+                        throw new RuntimeException("Error in line " + currLine + " of database file: Particle identifiers must be unique.");
+                    partNames.add(partName);
+                    double radius = Double.parseDouble(nameMatch.group("radius"));
+                    currLine++;
+
+                    int nGhosts = 0;
+                    List<Atom> atoms = new ArrayList<>();
+                    for (int i = 0; i < atomCount; i++) {
+                        do { line = scanner.nextLine().trim(); } while (line.startsWith("//") || line.length() == 0);
+                        Matcher atomMatch = patterns[2].matcher(line);
+                        if (!atomMatch.find())
+                            throw new RuntimeException("Error in line " + currLine + " of database file: Unexpected format for atom definition.");
+                        String atomName = atomMatch.group("aname");
+                        double[] params = Arrays.stream(atomMatch.group("vars").trim().split(" {2,}")).mapToDouble(Double::parseDouble).toArray();
+                        if (atomName.contains("*")) nGhosts++;
+                        if (nGhosts == atomCount)
+                            throw new RuntimeException("Error in line " + currLine + " of database file: A particle may not be comprised of only ghost atoms.");
+                        Atom a = new Atom(atomName, params);
+                        atoms.add(a);
                         currLine++;
-                        if (s.length != 2) {
-                            throw new IOException();
-                        }
-                        double radius = Double.parseDouble(s[1]);
-                        String name = s[0];
-                        int numGhosts = 0;
-                        for (int x = 0; x < n; x++) {
-                            String[] atom = scanner.nextLine().split(" " + " +");
-                            currLine++;
-                            if (atom.length != 10) {
-                                throw new IOException();
-                            }
-                            Atom a = new Atom(atom[0], Double.parseDouble(atom[1]), Double.parseDouble(atom[2]), Double.parseDouble(atom[3]), Double.parseDouble(atom[4]), Double.parseDouble(atom[5]), Double.parseDouble(atom[6]), Double.parseDouble(atom[7]), Double.parseDouble(atom[8]), Double.parseDouble(atom[9]));
-                            atoms.add(a);
-                            if (a.symbol.contains("*")){
-                                numGhosts++;
-                            }
-                        }
-                        if (numGhosts == n){
-                            throw new RuntimeException("Error on line " + currLine + " in dbase.txt: Molecule " + name + " cannot be comprised of only ghost atoms.");
-                        }
-                        Molecule m = new Molecule(name, radius, atoms);
-                        dbase.add(m);
                     }
-                }
-                catch (IOException exc){
-                    scanner.close();
-                    throw new RuntimeException("Error on line " + currLine + " in dbase.txt: File incorrectly formatted.");
+                    Molecule m = new Molecule(partName, radius, atoms);
+                    dbase.add(m);
+                } catch (NoSuchElementException ignored) {
+                    throw new RuntimeException("Error in line " + currLine + " of database file: Unexpected end of file.");
                 }
             }
-            scanner.close();
-    	}
+        }
     	catch (IOException exc) {
     		throw new RuntimeException("Error: File " + pathName + " not found.");
     	}
     }
-    //Reads annealing config from config.txt
-    public void readCFG(String pathName){
-        try {
-            //Construct path to file, rather complicated but has to work with .jar or project files for testing
-            Scanner scanner = new Scanner(new File(pathName));
-            int currLine = 3; //Tracks current line for error printing
-            //Skip 2 lines for comments
-            scanner.nextLine();
-            scanner.nextLine();
-            try {
-                //Read configs; splits when 2 or more spaces are found
-                maxTemperature = Double.parseDouble(scanner.nextLine().split(" " + " +")[1]);
-                currLine++;
-                movePerPoint = Integer.parseInt(scanner.nextLine().split(" " + " +")[1]);
-                currLine++;
-                pointsPerTooth = Integer.parseInt(scanner.nextLine().split(" " + " +")[1]);
-                currLine++;
-                pointIncrement = Integer.parseInt(scanner.nextLine().split(" " + " +")[1]);
-                currLine++;
-                numTeeth = Integer.parseInt(scanner.nextLine().split(" " + " +")[1]);
-                currLine++;
-                tempDecreasePerTooth = Double.parseDouble(scanner.nextLine().split(" " + " +")[1]);
-                currLine++;
-                maxTransDist = Double.parseDouble(scanner.nextLine().split(" " + " +")[1]);
-                currLine++;
-                magwalkFactorTrans = Double.parseDouble(scanner.nextLine().split(" " + " +")[1]);
-                currLine++;
-                magwalkProbTrans = Double.parseDouble(scanner.nextLine().split(" " + " +")[1]);
-                currLine++;
-                maxRotDegree = Double.parseDouble(scanner.nextLine().split(" " + " +")[1]);
-                currLine++;
-                magwalkProbRot = Double.parseDouble(scanner.nextLine().split(" " + " +")[1]);
-                currLine++;
-                size = Double.parseDouble(scanner.nextLine().split(" " + " +")[1]);
-                currLine++;
-                maxPropFailures = Integer.parseInt(scanner.nextLine().split(" " + " +")[1]);
-                currLine++;
-                useInput = Boolean.parseBoolean(scanner.nextLine().split(" " + " +")[1]);
-                currLine++;
-                useParams = Boolean.parseBoolean(scanner.nextLine().split(" " + " +")[1]);
-                currLine++;
-                extraCycle = Boolean.parseBoolean(scanner.nextLine().split(" " + " +")[1]);
-                currLine++;
-                staticTemp = Boolean.parseBoolean(scanner.nextLine().split(" " + " +")[1]);
-                currLine++;
-                writeEnergiesEnabled = Boolean.parseBoolean(scanner.nextLine().split(" " + " +")[1]);
-                currLine++;
-                writeConfHeatCapacitiesEnabled = Boolean.parseBoolean(scanner.nextLine().split(" " + " +")[1]);
-                currLine++;
-                eqConfigs = Integer.parseInt(scanner.nextLine().split(" " + " +")[1]);
-                currLine++;
-                writeAcceptanceRatios = Boolean.parseBoolean(scanner.nextLine().split(" " + " +")[1]);
-                currLine++;
-                //Skip 3 lines for comments
-                scanner.nextLine();
-                scanner.nextLine();
-                scanner.nextLine();
-                currLine += 2;
-                //Read molecules to place
-                while (scanner.hasNextLine()) {
-                    String line = scanner.nextLine();
-                    currLine++;
-                    String name = line.split(" {2,}")[0];
-                    int num = Integer.parseInt(line.split(" {2,}")[1]);
-                    for (int x = 0; x < num; x++) {
-                        if (!add(name)) {
-                            scanner.close();
-                            throw new RuntimeException("Error on line " + currLine + " in config.txt: Unable to find particle '" + name + "' in dbase.txt.");
-                        }
-                    }
-                }
-            }
-            catch (NumberFormatException exc){
-                scanner.close();
-                throw new RuntimeException("Error on line " + currLine + " in config.txt: File incorrectly formatted.");
-            }
-        }
-        catch (IOException exc){
-            throw new RuntimeException("Error: File " + pathName + " not found.");
-        }
-    }
+
     public void readInput(String pathName){
         try (Scanner scanner = new Scanner(new File(pathName))) {
             int currLine = 1; // Tracks current line for error printing
@@ -338,18 +242,17 @@ public class Space {
 
         try (Scanner scanner = new Scanner(new File(pathName))) {
             int currLine = 1; // Tracks current line for error printing
-            for (String line = scanner.nextLine().trim();; line = scanner.nextLine(), currLine++) {
-                // Skip empty lines
-                if (line.length() == 0) continue;
-                // Parse alias lines (anywhere in the file)
+            for (String line = scanner.nextLine().trim();; line = scanner.nextLine().trim(), currLine++) {
                 Matcher aliasMatcher = aliasPattern.matcher(line);
                 Matcher paramMatcher = paramPattern.matcher(line);
-                if (aliasMatcher.find()) {
+                // Skip empty lines
+                if (line.length() == 0);
+                // Parse alias lines (anywhere in the file)
+                else if (aliasMatcher.find()) {
                     String particleName = aliasMatcher.group("particle");
-                    if (aliasedParticles.contains(particleName)) {
-                        scanner.close();
+                    if (aliasedParticles.contains(particleName))
                         throw new RuntimeException("Error on line " + currLine + " in interaction parameters file: Cannot alias the same particle type twice.");
-                    }
+
                     List<String> aliasList = Arrays.stream(aliasMatcher.group("aliases").split(",")).map(String::trim).collect(Collectors.toList());
                     Molecule aliased = null;
                     for (Molecule particle : dbase) {
@@ -359,11 +262,9 @@ public class Space {
                         }
                     }
                     if (aliased == null) {
-                        scanner.close();
                         throw new RuntimeException("Error on line " + currLine + " in interaction parameters file: Aliased particle does not exist.");
                     }
                     if (aliased.atoms.size() != aliasList.size()) {
-                        scanner.close();
                         throw new RuntimeException("Error on line " + currLine + " in interaction parameters file: Number of atom aliases does not match number of atoms defined in the input database.");
                     }
 
@@ -383,7 +284,6 @@ public class Space {
                 }
                 // Otherwise, error
                 else {
-                    scanner.close();
                     throw new RuntimeException("Error on line " + currLine + " in interaction parameters file: File incorrectly formatted.");
                 }
                 if (!scanner.hasNextLine()) break;
@@ -495,7 +395,7 @@ public class Space {
             writer.write(out.toString());
             writer.close();
 
-            if (useInput) { // If enabled, copy Input.xyz to new directory
+            if (Config.useInput) { // If enabled, copy Input.xyz to new directory
                 scanner = new Scanner(new File(parsedArgs.get("input")));
                 out = new StringBuilder();
                 while (scanner.hasNextLine()) {
@@ -760,7 +660,7 @@ public class Space {
     public Pair<Double, Integer> rotate(Molecule m, double maxRot, double temp) {
         m.rotateTemp(maxRot); //Temporarily rotate molecule
         for (Atom a : m.atoms){
-            if (a.tempx > size * 0.75 || a.tempx < size * -0.75 || a.tempy > size * 0.75 || a.tempy < size * -0.75 ||a.tempz > size * 0.75 || a.tempz < size * -0.75){
+            if (a.tempx > Config.spaceLen * 0.75 || a.tempx < Config.spaceLen * -0.75 || a.tempy > Config.spaceLen * 0.75 || a.tempy < Config.spaceLen * -0.75 ||a.tempz > Config.spaceLen * 0.75 || a.tempz < Config.spaceLen * -0.75){
                 m.resetTemps();
                 return new Pair<>(0.0, 0);
             }
@@ -803,7 +703,7 @@ public class Space {
     		a.tempz += z;
     	}
     	for (Atom a : m.atoms){
-    	    if (a.tempx > size * 0.75 || a.tempx < size * -0.75 || a.tempy > size * 0.75 || a.tempy < size * -0.75 ||a.tempz > size * 0.75 || a.tempz < size * -0.75){
+    	    if (a.tempx > Config.spaceLen * 0.75 || a.tempx < Config.spaceLen * -0.75 || a.tempy > Config.spaceLen * 0.75 || a.tempy < Config.spaceLen * -0.75 ||a.tempz > Config.spaceLen * 0.75 || a.tempz < Config.spaceLen * -0.75){
                 m.resetTemps();
                 return new Pair<>(0.0, 0);
             }
@@ -906,7 +806,7 @@ public class Space {
     }
     //Appends energy values to energies.txt in dir if staticTemp = true
     public void writeEnergy(double energy){
-        if (staticTemp){
+        if (Config.staticTemp){
             try {
                 String pathName = dir + "/energies.txt";
                 FileWriter writer = new FileWriter(pathName, true);
@@ -919,7 +819,7 @@ public class Space {
         }
     }
     public void writeAcceptance(double temperature, int accepted, int total){
-        if(writeAcceptanceRatios){ //TODO: fix this
+        if (Config.writeAcceptanceRatios){ //TODO: fix this
             try{
                 double ratio = (double) accepted / (double) total;
                 String pathName = dir + "/acceptance_ratios.txt";

@@ -5,7 +5,6 @@ import org.apache.commons.math3.util.Precision;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.net.URLDecoder;
@@ -13,56 +12,68 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Main {
-    private static final MersenneTwister r = new MersenneTwister();
+	private static final MersenneTwister r = new MersenneTwister(); // Used instead of Java.Random for greater accuracy in randomization
+
     public static void main(String[] args) {
     	long procStart = System.nanoTime();
-		Space s = new Space(10);
+		Space s = new Space();
     	try {
 			long time1 = System.nanoTime();
 			Map<String, String> parsedArgs = getArgs(args);
+			if (parsedArgs.containsKey("seed")) {
+				try {
+					MersenneTwister seedGenerator = new MersenneTwister();
+					seedGenerator.setSeed(Long.parseLong(parsedArgs.get("seed")));
+					setSeed(seedGenerator.nextLong());
+					Space.setSeed(seedGenerator.nextLong());
+					Molecule.setSeed(seedGenerator.nextLong());
+				} catch (NumberFormatException e) {
+					throw new RuntimeException("Error: --set-seed argument must be a valid long value.");
+				}
+			}
 			s.makeDirectoryName(parsedArgs);
 			s.makeDirectory(parsedArgs);
 			System.out.println("Writing output to: " + s.getDir());
 			s.readDB(parsedArgs.get("dbase"));
-			s.readCFG(parsedArgs.get("config"));
-			if (!s.useInput && parsedArgs.get("inputIncluded").equals("yes")) {
+			Config.parseConfig(parsedArgs.get("config"), s);
+			if (!Config.useInput && parsedArgs.get("inputIncluded").equals("yes")) {
 				throw new RuntimeException("Error: You cannot provide a parameter for --input if \"Use Input.xyz\" is not selected in your config.");
 			}
-			if (!s.useParams && parsedArgs.get("paramsIncluded").equals("yes")) {
+			if (!Config.chooseParams && parsedArgs.get("paramsIncluded").equals("yes")) {
 				throw new RuntimeException("Error: You cannot provide a parameter for --params if \"Choose All Interaction Parameters\" is not selected in your config.");
 			}
-			if (s.useParams) s.readParams(parsedArgs.get("interactionParams"));
+			if (Config.chooseParams) s.readParams(parsedArgs.get("interactionParams"));
 			else s.setupPairVals();
 			s.writeParams();
-			if (s.useInput) {
+			if (Config.useInput) {
 				//Read molecules from Input.xyz, do not propagate
 				s.readInput(parsedArgs.get("input"));
 			} else {
 				//If molecules can't be placed in space of given size within 20 tries, increase size by 10% and retry
 				while (!s.propagate()) {
-					s.size = s.size * 1.1;
+					Config.spaceLen *= 1.1;
 				}
 			}
 			long time2 = System.nanoTime();
 			String stamp = timestamp(time1, time2);
 			s.write(0);
 			String initText = "Initialization ";
-			if (!s.useInput) {
+			if (!Config.useInput) {
 				initText += "and propagation ";
 			}
 			s.log(initText + "done in " + stamp);
-			s.log("Cluster movement constrained within cube with side length " + s.size * 1.5);
+			s.log("Cluster movement constrained within cube with side length " + Config.spaceLen * 1.5);
 			double startingEnergy = s.calcEnergy();
 			s.log("Starting Energy: " + startingEnergy);
 			time1 = System.nanoTime();
-			if (s.staticTemp) {
-				s.numTeeth = 1;
-				s.pointsPerTooth = 1;
-				if (s.writeEnergiesEnabled) {
+			if (Config.staticTemp) {
+				Config.numTeeth = 1;
+				Config.ptsPerTooth = 1;
+				if (Config.writeEnergiesEnabled) {
 					s.writeEnergy(startingEnergy);
 				}
 			}
-			sawtoothAnneal(s, s.maxTemperature, s.movePerPoint, s.pointsPerTooth, s.pointIncrement, s.numTeeth, s.tempDecreasePerTooth, s.maxTransDist, s.magwalkFactorTrans, s.magwalkProbTrans, s.maxRotDegree, s.magwalkProbRot, startingEnergy);
+			sawtoothAnneal(s, startingEnergy);
 			time2 = System.nanoTime();
 			stamp = timestamp(time1, time2);
 			s.log("Annealing done in " + stamp + ".");
@@ -101,9 +112,11 @@ public class Main {
 					parsed.put("inputIncluded", "yes");
 				case "-p":
 				case "--params":
-					argName = "interactionParams";
-					fileType = ".txt";
-					parsed.put("paramsIncluded", "yes");
+					if (argName == null) {
+						argName = "interactionParams";
+						parsed.put("paramsIncluded", "yes");
+					}
+					if (fileType == null) fileType = ".txt";
 				case "-d":
 				case "--dbase":
 					if (argName == null) argName = "dbase";
@@ -132,6 +145,11 @@ public class Main {
 					if (!file.canWrite()) throw new RuntimeException(String.format("Error: Cannot write to directory %s", file.getCanonicalPath()));
 					parsed.put("output", value);
 					break;
+				case "-s":
+				case "--set-seed":
+					i++;
+					parsed.put("seed", args[i]);
+					break;
 				default:
 					if (arg.startsWith("-")) {
 						throw new RuntimeException(String.format("Error: Unknown flag: %s", arg));
@@ -141,7 +159,7 @@ public class Main {
 			}
 		}
 
-		// test existence of all files
+		// test existence of required files
 		File cFile = new File(parsed.get("config"));
 		if (!cFile.exists()) throw new RuntimeException(String.format("Error: File not found: %s", cFile.getCanonicalPath()));
 		File dFile = new File(parsed.get("dbase"));
@@ -150,20 +168,25 @@ public class Main {
 		return parsed;
 	}
 
-    public static void sawtoothAnneal(Space s, double maxTemp, double numMovesPerPoint, int ptsPerTooth, int ptsIncrement, int numTeeth, double toothScale, double maxD, double magwalkFactorTrans, double magwalkProbTrans, double maxRot, double magwalkProbRot, double startingEnergy) {
-    	double t = maxTemp;
+    public static void sawtoothAnneal(Space s, double startingEnergy) {
+    	double t = Config.maxTemp;
     	double saveT = t;
     	//Boolean used to check if final cycle
     	boolean isDoubleCycle = false;
-    	for (int x = 0; x < numTeeth; x++) {
+		int ptsPerTooth = Config.ptsPerTooth;
+		double magwalkProbRot = Config.magwalkProbRot;
+		double magwalkProbTrans = Config.magwalkProbTrans;
+		double maxD = Config.maxTrans;
+		double maxRot = Config.maxRot;
+    	for (int x = 0; x < Config.numTeeth; x++) {
     		double delT = t / (ptsPerTooth - 1);
     		int accepted = 0;
     		int total = 0;
-    		for (int y = 0; y < ptsPerTooth; y++) {
+			for (int y = 0; y < ptsPerTooth; y++) {
 				//Energy counters used for average energy
 				double totalEnergy = 0;
 				double totalSquaredEnergy = 0;
-    			for (int z = 0; z < numMovesPerPoint; z++) {
+    			for (int z = 0; z < Config.movePerPt; z++) {
     				total++;
     				Molecule m = s.randMolecule(); //Pick a random molecule
 					Pair<Double, Integer> values;
@@ -180,29 +203,29 @@ public class Main {
 							values = s.move(m, maxD, t);
                         }
                         else{
-							values = s.move(m, maxD * magwalkFactorTrans, t); //Magwalking multiplies distance maximum by magwalk factor (specified in config file)
+							values = s.move(m, maxD * Config.magwalkFactorTrans, t); //Magwalking multiplies distance maximum by magwalk factor (specified in config file)
                         }
                     }
 					startingEnergy += values.getFirst();
-					if (!s.staticTemp || z > s.eqConfigs) {
+					if (!Config.staticTemp || z > Config.eqConfigs) {
 						totalEnergy += startingEnergy;
 						totalSquaredEnergy += Math.pow(startingEnergy, 2);
 					}
-                    if (s.writeEnergiesEnabled) {
+                    if (Config.writeEnergiesEnabled) {
 						s.writeEnergy(startingEnergy);
 					}
                     accepted += values.getSecond();
     			}
     			s.writeAcceptance(t, accepted, total);
-				if (s.writeConfHeatCapacitiesEnabled) {
+				if (Config.writeConfHeatCapacitiesEnabled) {
 					double roundedTemperature = new BigDecimal(t).setScale(2, RoundingMode.HALF_UP).doubleValue();
 					if (roundedTemperature == 0) continue;
-					double avgEnergy = totalEnergy / numMovesPerPoint;
-					double avgSquaredEnergy = totalSquaredEnergy / numMovesPerPoint;
+					double avgEnergy = totalEnergy / Config.movePerPt;
+					double avgSquaredEnergy = totalSquaredEnergy / Config.movePerPt;
 					double configurationalHeatCapacity = (avgSquaredEnergy - Math.pow(avgEnergy, 2)) / (Space.BOLTZMANN_CONSTANT * Math.pow(t, 2));
 					s.writeConfigurationalHeatCapacity(roundedTemperature, avgEnergy, configurationalHeatCapacity);
 				}
-    			if (!s.staticTemp){
+    			if (!Config.staticTemp){
 					t -= delT; //Decrease temperature by decrement factor
 				}
     			if (t < 0) {
@@ -210,10 +233,10 @@ public class Main {
     			}
     			s.writeMovie(x, x+1);
     		}
-    		saveT *= toothScale;
+    		saveT *= Config.tempDecreasePerTooth;
     		t = saveT;
-    		ptsPerTooth += ptsIncrement;
-			if (x == numTeeth - 1 && !isDoubleCycle && s.extraCycle){
+    		ptsPerTooth += Config.ptsAddedPerTooth;
+			if (x == Config.numTeeth - 1 && !isDoubleCycle && Config.finale){
 				t = 0;
 				isDoubleCycle = true;
 				x--;
@@ -228,10 +251,15 @@ public class Main {
 			}
     	}
     	//After all teeth, if numTeeth > 1, write minimum energy
-		if (numTeeth > 1){
+		if (Config.numTeeth > 1){
 			s.writeMinEnergy();
 		}
     }
+
+	public static void setSeed(long seed) {
+		r.setSeed(seed);
+	}
+
     public static String timestamp(long time1, long time2){
     	String ret = "";
 		float runtime = (time2 - time1) / 1000000000f;

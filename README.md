@@ -1,4 +1,4 @@
-# TransRot Version 1.9.0
+# TransRot Version 1.9.1
 
 Steven L. Topper, Elliot Topper, and Robert Q. Topper\
 Albert Nerken School of Engineering\
@@ -86,10 +86,11 @@ The possible command-line parameters are as follows:
 - **-i / --input**: The filepath following this identifier will be used in the place of `Input.xyz`. This option can only be included when ['Use Input.xyz'](#use-input) is true.
 - **-p / --params**: The filepath following this identifier will be used in the place of `interaction_params.txt`. This option can only be included when ['Choose All Interaction Parameters'](#choose-params) is true.
 - **-o / --output**: The path following this identifier should be the location of a directory. The output of the current run of TransRot will be generated in a subfolder of the folder specified here. Defaults to `.` (same directory as Transrot.jar)
+- **-s / --set-seed**: This argument expects a long (integer) value, which is used to seed the parent Mersenne Twister (random number generator) instance. Using `--set-seed` allows for reproducible TransRot simulations.
 
 ## How to customize run parameters
 
-All run parameters are set in config.txt. **VERY IMPORTANT:** Each parameter must be separated from its label by a colon followed by **at least 2 spaces**.
+All run parameters are set in the specified configuration file, or `config.txt`.
 
 - Max Temperature (K): Starting temperature of the annealing process, from which the cluster will be cooled down to 0K in the first cooling cycle.
 - Moves per Point: Number of attempted translations or rotations per temperature segment.
@@ -121,7 +122,7 @@ All run parameters are set in config.txt. **VERY IMPORTANT:** Each parameter mus
 - Number of Equilibration Configurations: When Static Temperature and Write Configurational Heat Capacities are both enabled, the first N energies will not be considered in the configurational heat capacity, where N is the value set for Number of Equilibration Configurations.
 - Write Acceptance Ratios (true/false): This option is designed to help with determining other values such as Max Translation Distance. When enabled, the ratio of accepted moves for each temperature point will be written to "acceptance_ratios.txt", along with the corresponding temperature in degrees Kelvin.
     
-The particles to be used in the simulation are set at the bottom of config.txt. Each line includes the molecular formula of a particle followed by the number of that particle to be included, separated by **two or more spaces**. The default config.txt contains setup for an ammonium chloride cluster with 4 ammonium ions and 4 chloride ions, as follows:\
+The particles to be used in the simulation are set at the bottom of the configuration file. Each line includes the molecular formula of a particle followed by the number of that particle to be included, separated by **two or more spaces**. The default config.txt contains setup for an ammonium chloride cluster with 4 ammonium ions and 4 chloride ions, as follows:\
 NH4+  4\
 Cl-  4
 
@@ -173,7 +174,6 @@ The double sums above are meant to imply that all of the interactions are summed
 | D<sub>ij</sub> | kcal / (Angstroms<sup>12</sup>)(mole) |
 | Q<sub>i</sub> | atomic units of charge (here the charge of the electron = 1 exactly) |
 | Mass<sub>i</sub> | amu (the mass of carbon<sub>12</sub> is 12.000 amu) |
-
 
 Interactions between unlike atoms (i,j) on different particles are obtained within the code using arithmetic averages for the B parameters: \
 <img src=https://user-images.githubusercontent.com/6625247/132400815-5e64203d-a145-48f1-b484-a354d82b8bf0.PNG width=18% height=18%> \
@@ -228,4 +228,4 @@ To report a bug or issue, or to submit a feature request, please create a new is
 
 ## More Information
 
-For more information regarding TransRot, optimization videos, and examples, visit the Wiki for this project. You may also visit [the project page](https://engfac.cooper.edu/topper/764) at Cooper Union. The Visual TransRot project may be found at https://github.com/xaridar/VisualTransRot.  
+For more information regarding TransRot, optimization videos, and examples, visit the Wiki for this project. You may also visit [the project page](https://engfac.cooper.edu/topper/764) at Cooper Union. The Visual TransRot project may be found at https://github.com/xaridar/VisualTransRot.
