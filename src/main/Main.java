@@ -36,7 +36,6 @@ public class Main {
 			System.out.println("Writing output to: " + s.getDir());
 			s.readDB(parsedArgs.get("dbase"));
 			Config.parseConfig(parsedArgs.get("config"), s);
-//			s.readCFG(parsedArgs.get("config"));
 			if (!Config.useInput && parsedArgs.get("inputIncluded").equals("yes")) {
 				throw new RuntimeException("Error: You cannot provide a parameter for --input if \"Use Input.xyz\" is not selected in your config.");
 			}
