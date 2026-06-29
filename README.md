@@ -59,6 +59,7 @@ After the test simulation completes four teeth and exits, there will be a new fo
 - config.txt: a copy of the main directory’s config.txt file and a record of the parameters used in the simulation.
 - log.txt: a record of all lines of output from the program, excluding certain error messages.
 - elapsed_time.log: a file containing the number of nanoseconds elapsed during the simulation.
+- seed.log: a file containing the seed used for random number generation in the simulation; either user-defined or system-generated.
 - OutputX.xyz: a file recording molecule positions in a format (XYZ) that can be read by other molecular modeling programs (i.e. Avogadro, Spartan). Contains the state of the system after sawtooth number X; Output0.xyz contains the starting state of the system before any annealing takes place. These structures are the code’s predictions of minimum energy structures.
 - OutputX_Y_Movie.xyz: an animation file designed to be read by other molecular modeling programs (i.e. Avogadro’s Animation extension). Contains n states of the system between sawtooths number X and Y, where n is the number of points per tooth given in config.txt.
 - Min_Energy_Structure_X.xyz: a copy of the output file containing the lowest energy structure, as indicated by X. For example, Min_Energy_Structure_3.xyz would be a copy of Output3.xyz. Only generated when two or more teeth are simulated.
