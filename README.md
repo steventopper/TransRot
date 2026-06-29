@@ -1,4 +1,4 @@
-# TransRot Version 1.9.1
+# TransRot Version 1.9.2
 
 Steven L. Topper, Elliot Topper, and Robert Q. Topper\
 Albert Nerken School of Engineering\
@@ -11,7 +11,7 @@ http://engfac.cooper.edu/topper
 
 TransRot (which stands for translation-rotation) is used to carry out simulated annealing geometry optimizations of atomic and molecular clusters using rigid body Monte Carlo methods. It is written in Java and has been tested under Windows (10 and 11), Linux (Ubuntu), and MacOS (El Catalina, Monterey, Ventura, Sequoia, and Tahoe). Under the MacOS, multiple instances run in parallel on multiple cores with high efficiency, which allows multiple parameter sets to be explored simultaneously. Our goal is to produce software that is numerically efficient, machine portable, and simple to set up and use. We hope this proves to be a useful software tool for computational chemists and physicists.
 
-Although TransRot is a standalone tool run from the command line, it also works as a backend for Visual TransRot (VTR). One of us (ET) designed VTR so as to make production work on a personal workstation simple and easy to manage. Like TransRot, VTR is programmed in Java and will run on all major operating systems. Please note that earlier TransRot versions are not compatible with VTR. Please visit the Visual TransRot project at https://github.com/xaridar/VisualTransRot.  
+Although TransRot is a standalone tool run from the command line, it also works as a backend for Visual TransRot (VTR). One of us (ET) designed VTR so as to make production work on a personal workstation simple and easy to manage. Like TransRot, VTR is programmed in Java and will run on all major operating systems. Please note that TransRot versions earlier than 1.8.0 are not compatible with VTR. Please visit the Visual TransRot project at https://github.com/xaridar/VisualTransRot.  
 
 The code uses a combination of two specific methods designed to overcome quasi-ergodicity and asymptotic quench rate problems that are not available in other publicly available codes. The first method is designed to overcome the problem that a simple linear or exponential cooling scheme may quench into a local minimum and never find its way out to locate the global minimum. TransRot uses a multilinear “sawtooth” temperature adjustment schedule in the simulated annealing process which takes the system through a series of slow cooling and instantaneous heating cycles, decreasing the uppermost temperature used at the start of each new cooling cycle.(1) This process enhances the probability of finding the global minimum and, with appropriate annealing parameters, can also be used to explore higher-energy structures as well. The second method unique to TransRot is the probabilistic use of magnified translational and rotational stepsizes, a process we have called “magwalking.”(2-4) These magnifications prevent molecules from becoming locked into locally minimum-energy orientations prematurely as the system is cooled, giving it the opportunity to overcome local energy barriers as needful.
 
@@ -59,6 +59,7 @@ After the test simulation completes four teeth and exits, there will be a new fo
 - config.txt: a copy of the main directory’s config.txt file and a record of the parameters used in the simulation.
 - log.txt: a record of all lines of output from the program, excluding certain error messages.
 - elapsed_time.log: a file containing the number of nanoseconds elapsed during the simulation.
+- seed.log: a file containing the seed used for random number generation in the simulation; either user-defined or system-generated.
 - OutputX.xyz: a file recording molecule positions in a format (XYZ) that can be read by other molecular modeling programs (i.e. Avogadro, Spartan). Contains the state of the system after sawtooth number X; Output0.xyz contains the starting state of the system before any annealing takes place. These structures are the code’s predictions of minimum energy structures.
 - OutputX_Y_Movie.xyz: an animation file designed to be read by other molecular modeling programs (i.e. Avogadro’s Animation extension). Contains n states of the system between sawtooths number X and Y, where n is the number of points per tooth given in config.txt.
 - Min_Energy_Structure_X.xyz: a copy of the output file containing the lowest energy structure, as indicated by X. For example, Min_Energy_Structure_3.xyz would be a copy of Output3.xyz. Only generated when two or more teeth are simulated.
@@ -86,7 +87,7 @@ The possible command-line parameters are as follows:
 - **-i / --input**: The filepath following this identifier will be used in the place of `Input.xyz`. This option can only be included when ['Use Input.xyz'](#use-input) is true.
 - **-p / --params**: The filepath following this identifier will be used in the place of `interaction_params.txt`. This option can only be included when ['Choose All Interaction Parameters'](#choose-params) is true.
 - **-o / --output**: The path following this identifier should be the location of a directory. The output of the current run of TransRot will be generated in a subfolder of the folder specified here. Defaults to `.` (same directory as Transrot.jar)
-- **-s / --set-seed**: This argument expects a long (integer) value, which is used to seed the parent Mersenne Twister (random number generator) instance. Using `--set-seed` allows for reproducible TransRot simulations.
+- **-s / --seed / --set-seed**: This argument expects a long (integer) value, which is used to seed the parent Mersenne Twister (random number generator) instance. Using `--set-seed` allows for reproducible TransRot simulations.
 
 ## How to customize run parameters
 

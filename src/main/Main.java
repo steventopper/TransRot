@@ -20,20 +20,25 @@ public class Main {
     	try {
 			long time1 = System.nanoTime();
 			Map<String, String> parsedArgs = getArgs(args);
+			long seed;
+			MersenneTwister seedGenerator = new MersenneTwister();
 			if (parsedArgs.containsKey("seed")) {
 				try {
-					MersenneTwister seedGenerator = new MersenneTwister();
-					seedGenerator.setSeed(Long.parseLong(parsedArgs.get("seed")));
-					setSeed(seedGenerator.nextLong());
-					Space.setSeed(seedGenerator.nextLong());
-					Molecule.setSeed(seedGenerator.nextLong());
+					seed = Long.parseLong(parsedArgs.get("seed"));
 				} catch (NumberFormatException e) {
-					throw new RuntimeException("Error: --set-seed argument must be a valid long value.");
+					throw new RuntimeException("Error: --seed argument must be a valid long value.");
 				}
+			} else {
+				seed = System.currentTimeMillis();
 			}
+			seedGenerator.setSeed(seed);
+			setSeed(seedGenerator.nextLong());
+			Space.setSeed(seedGenerator.nextLong());
+			Molecule.setSeed(seedGenerator.nextLong());
 			s.makeDirectoryName(parsedArgs);
 			s.makeDirectory(parsedArgs);
 			System.out.println("Writing output to: " + s.getDir());
+			s.writeSeed(seed);
 			s.readDB(parsedArgs.get("dbase"));
 			Config.parseConfig(parsedArgs.get("config"), s);
 			if (!Config.useInput && parsedArgs.get("inputIncluded").equals("yes")) {
@@ -146,6 +151,7 @@ public class Main {
 					parsed.put("output", value);
 					break;
 				case "-s":
+				case "--seed":
 				case "--set-seed":
 					i++;
 					parsed.put("seed", args[i]);

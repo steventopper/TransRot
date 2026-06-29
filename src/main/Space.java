@@ -874,4 +874,17 @@ public class Space {
             System.exit(1);
         }
     }
+
+    public void writeSeed(long seed) {
+        try {
+            String writePath = dir + "/seed.log";
+            FileWriter writer = new FileWriter(writePath, false);
+            writer.write(Long.toString(seed));
+            writer.close();
+            System.out.println("Seed written to " + writePath + ": " + seed);
+        } catch (Exception exc) {
+            System.err.println("Error: Failed to write to " + dir + "/seed.log");
+            System.exit(1);
+        }
+    }
 }
