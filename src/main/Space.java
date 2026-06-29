@@ -881,6 +881,7 @@ public class Space {
             FileWriter writer = new FileWriter(writePath, false);
             writer.write(Long.toString(seed));
             writer.close();
+            System.out.println("Seed written to " + writePath + ": " + seed);
         } catch (Exception exc) {
             System.err.println("Error: Failed to write to " + dir + "/seed.log");
             System.exit(1);

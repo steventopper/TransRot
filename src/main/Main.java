@@ -37,8 +37,8 @@ public class Main {
 			Molecule.setSeed(seedGenerator.nextLong());
 			s.makeDirectoryName(parsedArgs);
 			s.makeDirectory(parsedArgs);
-			s.writeSeed(seed);
 			System.out.println("Writing output to: " + s.getDir());
+			s.writeSeed(seed);
 			s.readDB(parsedArgs.get("dbase"));
 			Config.parseConfig(parsedArgs.get("config"), s);
 			if (!Config.useInput && parsedArgs.get("inputIncluded").equals("yes")) {
