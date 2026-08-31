@@ -548,8 +548,12 @@ public class Space {
 
     // Writes atom placements to .xyz file. Programs that read .xyz files will figure out what atoms go to what molecules, so that information is unnecessary
     public void write(int outputFileNumber){
+        this.write(outputFileNumber, false);
+    }
+    public void write(int outputFileNumber, boolean incl_ipoints){
         try{
-        	String pathName = dir + "/Output" + outputFileNumber + ".xyz"; //dir specified in makeDirectory()
+            String suffix = incl_ipoints ? ".xyzi" : ".xyz";
+        	String pathName = dir + "/Output" + outputFileNumber + suffix; //dir specified in makeDirectory()
             FileWriter writer = new FileWriter(pathName);
             double toothEnergy = calcEnergy();
 
@@ -571,7 +575,7 @@ public class Space {
             StringBuilder content = new StringBuilder("          " + numAtoms() + "\nEnergy: " + toothEnergy + " Kcal/mole  " + molString);
             for (Molecule m : space){
                 for (Atom a : m.atoms){
-                    if (a.symbol.contains("*")){
+                    if (a.symbol.contains("*") && !incl_ipoints){
                         continue;
                     }
                     content.append("\n ").append(a.symbol);
