@@ -62,6 +62,7 @@ public class Main {
 			long time2 = System.nanoTime();
 			String stamp = timestamp(time1, time2);
 			s.write(0);
+			s.write(0, true);
 			String initText = "Initialization ";
 			if (!Config.useInput) {
 				initText += "and propagation ";
@@ -253,6 +254,7 @@ public class Main {
 			}
 			else{
 				s.write(x + 1);
+				s.write(x + 1, true);
 				s.log("Energy at end of tooth " + (x + 1) + ": " + s.calcEnergy());
 			}
     	}
