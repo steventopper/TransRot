@@ -572,7 +572,7 @@ public class Space {
             molString.delete(molString.length() - 3, molString.length());
 
             //Write to file in correct .xyz output format
-            StringBuilder content = new StringBuilder("          " + numAtoms() + "\nEnergy: " + toothEnergy + " Kcal/mole  " + molString);
+            StringBuilder content = new StringBuilder("          " + numAtoms(incl_ipoints) + "\nEnergy: " + toothEnergy + " Kcal/mole  " + molString);
             for (Molecule m : space){
                 for (Atom a : m.atoms){
                     if (a.symbol.contains("*") && !incl_ipoints){
@@ -626,16 +626,19 @@ public class Space {
         }
     }
     //Return number of atoms in space, used for write() as part of .xyz file format
-    private int numAtoms(){
+    private int numAtoms(boolean incl_ipoints){
         int ret = 0;
         for (Molecule molecule : space) {
             for (int y = 0; y < molecule.atoms.size(); y++) {
-                if (!molecule.atoms.get(y).symbol.contains("*")) { //Exclude ghosts from count
+                if (!molecule.atoms.get(y).symbol.contains("*") || incl_ipoints) { //Exclude ghosts from count
                     ret++;
                 }
             }
         }
         return ret;
+    }
+    private int numAtoms(){
+        return numAtoms(false);
     }
     //Prints database List as string, for debugging only
     public String printDbase() {
