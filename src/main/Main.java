@@ -109,12 +109,12 @@ public class Main {
 		for (int i = 0, argsLength = args.length; i < argsLength; i++) {
 			String arg = args[i];
 			String argName = null;
-			String fileType = null;
+			String[] fileType = null;
 			switch (arg) {
 				case "-i":
 				case "--input":
 					argName = "input";
-					fileType = ".xyz";
+					fileType = new String[]{".xyz", ".xyzi"};
 					parsed.put("inputIncluded", "yes");
 				case "-p":
 				case "--params":
@@ -122,22 +122,26 @@ public class Main {
 						argName = "interactionParams";
 						parsed.put("paramsIncluded", "yes");
 					}
-					if (fileType == null) fileType = ".txt";
+					if (fileType == null) fileType = new String[]{".txt"};
 				case "-d":
 				case "--dbase":
 					if (argName == null) argName = "dbase";
-					if (fileType == null) fileType = ".txt";
+					if (fileType == null) fileType = new String[]{".txt"};
 				case "-c":
 				case "--config":
 					if (argName == null) argName = "config";
-					if (fileType == null) fileType = ".txt";
+					if (fileType == null) fileType = new String[]{".txt"};
 					if (i == argsLength - 1) throw new RuntimeException(String.format("Error: Expected file path for \"%s\" parameter", argName));
 					i++;
 					String value = args[i];
 					File file = new File(value);
 					if (!file.exists()) throw new RuntimeException(String.format("Error: File not found: %s", file.getCanonicalPath()));
 					if (!file.canRead()) throw new RuntimeException(String.format("Error: Cannot read file %s", file.getCanonicalPath()));
-					if (!file.getPath().endsWith(fileType)) throw new RuntimeException(String.format("Error: Bad filetype for \"%s\" parameter; expected %s file", argName, fileType));
+					boolean fileTypeMatch = false;
+					for (String type : fileType){
+						if (file.getPath().endsWith(type)) fileTypeMatch = true;
+					}
+					if (!fileTypeMatch) throw new RuntimeException(String.format("Error: Bad filetype for \"%s\" parameter; expected %s file", argName, fileType));
 					parsed.put(argName, value);
 					break;
 				case "-o":

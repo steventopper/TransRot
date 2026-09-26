@@ -14,7 +14,7 @@ Length of Cubic Space:                                5.0
 Max Failures During Propagation:                      20
 Use Input.xyz (true/false):                           false
 Choose All Interaction Parameters (true/false):       false
-0K Finale (true/false):                               false
+0K Finale (true/false):                               true
 Static Temperature (true/false):                      false
 Write Energies When Static Temperature (true/false):  true
 Write Configurational Heat Capacities (true/false):   true
